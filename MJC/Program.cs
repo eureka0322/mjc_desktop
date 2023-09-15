@@ -1,6 +1,7 @@
 using MJC.common;
 using MJC.forms;
 using MJC.forms.login;
+using MJC.forms.order;
 using System.Reflection;
 
 
@@ -43,6 +44,7 @@ namespace MJC
             ShowSplash();
 
             Login login = new Login();
+          
             Application.Run(login);
        }
 

@@ -138,13 +138,6 @@ namespace MJC.forms.order
 
             hkCloseOrder.GetButton().Click += async (sender, e) =>
             {
-                Processing processingModal = new Processing();
-                processingModal.Show();
-                processingModal.FormClosed += async (ss, sargs) =>
-                {
-
-                };
-
                 CloseOrderActions CloseOrderActionsModal = new CloseOrderActions();
                 this.Enabled = false;
                 CloseOrderActionsModal.Show();

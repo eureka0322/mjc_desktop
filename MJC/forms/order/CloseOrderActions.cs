@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Antlr4.Runtime.Misc;
 
 namespace MJC.forms.order
 {
@@ -80,12 +81,20 @@ namespace MJC.forms.order
                 case Keys.D1:
                 case Keys.NumPad1:
                     this.saveFlage = 1;
-                    this.Close();
+                    PaymentProcessing paymentProcessing = new PaymentProcessing();
+                    paymentProcessing.Show();
+                    paymentProcessing.FormClosed += async(ss, sargs) => {
+                        this.Close();
+                    };
                     break;
                 case Keys.D2:
                 case Keys.NumPad2:
                     this.saveFlage = 2;
-                    this.Close();
+                    PaymentProcessing paymentProcessing1 = new PaymentProcessing();
+                    paymentProcessing1.Show();
+                    paymentProcessing1.FormClosed += async (ss, sargs) => {
+                        this.Close();
+                    };
                     break;
                 case Keys.D3:
                 case Keys.NumPad3:
@@ -118,6 +127,11 @@ namespace MJC.forms.order
                     this.Close();
                     break;
             }
+        }
+
+        private void PaymentProcessing_FormClosed(object? sender, FormClosedEventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         public int GetSaveFlage()
