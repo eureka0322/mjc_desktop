@@ -857,6 +857,10 @@ namespace MJC.forms.order
             var items = Session.PriceTiersModelObj.GetPriceTierItems();
             var priceTierItem = items[sku.PriceTierId];
 
+            List<dynamic> skuData = new List<dynamic>();
+            skuData = Session.SKUModelObj.GetSKUData(sku.Id);
+            bool taxable = (bool)skuData[0].taxable;
+
             this.OrderItemData.Add(new OrderItem
             {
                 SkuId = sku.Id,
@@ -869,7 +873,7 @@ namespace MJC.forms.order
                 LineTotal = sku.Price * sku.Qty,
                 SC = sku.CostCode.ToString(),
                 Quantity = sku.Qty > 0 ? sku.Qty : 1,
-                Tax = true,
+                Tax = taxable,
                 BillAsLabor = true
             });
 
