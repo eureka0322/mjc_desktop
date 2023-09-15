@@ -69,7 +69,7 @@ namespace MJC.forms.order
             this.customerId = customerId;
             this.selectedOrderId = orderId;
             this.orderId = selectedOrderId;
-
+            
             if (this.selectedOrderId != 0)
             {
                 isNewOrder = false;
@@ -631,8 +631,6 @@ namespace MJC.forms.order
             POGridRefer.Columns[6].Width = 200;
             POGridRefer.Columns[6].Visible = false;
 
-            POGridRefer.Columns[14].Visible = false;
-
             // DataGrid ComboBox column
             DataGridViewComboBoxColumn comboBoxColumn = new DataGridViewComboBoxColumn();
             comboBoxColumn.DataSource = Session.SKUModelObj.SKUDataList;
@@ -726,7 +724,7 @@ namespace MJC.forms.order
             }
             else
             // SKU Changed
-            if (e.ColumnIndex == 15)
+            if (e.RowIndex >= 0 && e.ColumnIndex == 14)
             {
                 DataGridViewComboBoxCell comboBoxCell = (DataGridViewComboBoxCell)POGridRefer.Rows[e.RowIndex].Cells[e.ColumnIndex];
                 int selectedValue = int.Parse(comboBoxCell.Value?.ToString());
@@ -856,7 +854,9 @@ namespace MJC.forms.order
             SKUOrderItem sku = this.SubSkuList[0];
             var items = Session.PriceTiersModelObj.GetPriceTierItems();
             var priceTierItem = items[sku.PriceTierId];
+            int costCodeId = sku.CostCode.Value;
 
+            var salesCostCodeData = Session.SalesCostCodesModelObj.GetSalesCostCodeData(costCodeId);
             this.OrderItemData.Add(new OrderItem
             {
                 SkuId = sku.Id,
@@ -867,7 +867,7 @@ namespace MJC.forms.order
                 PriceTierCode = sku.PriceTier,
                 UnitPrice = sku.Price,
                 LineTotal = sku.Price * sku.Qty,
-                SC = sku.CostCode.ToString(),
+                SC = salesCostCodeData.scCode,
                 Quantity = sku.Qty > 0 ? sku.Qty : 1,
                 Tax = true,
                 BillAsLabor = true
