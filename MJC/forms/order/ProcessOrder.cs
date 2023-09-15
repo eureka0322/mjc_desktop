@@ -857,6 +857,13 @@ namespace MJC.forms.order
             int costCodeId = sku.CostCode.Value;
 
             var salesCostCodeData = Session.SalesCostCodesModelObj.GetSalesCostCodeData(costCodeId);
+
+            List<dynamic> skuData = new List<dynamic>();
+            skuData = Session.SKUModelObj.GetSKUData(sku.Id);
+            bool taxable = (bool)skuData[0].taxable;
+
+            MessageBox.Show(taxable.ToString(), "");
+
             this.OrderItemData.Add(new OrderItem
             {
                 SkuId = sku.Id,
@@ -869,7 +876,7 @@ namespace MJC.forms.order
                 LineTotal = sku.Price * sku.Qty,
                 SC = salesCostCodeData.scCode,
                 Quantity = sku.Qty > 0 ? sku.Qty : 1,
-                Tax = true,
+                Tax = taxable,
                 BillAsLabor = true
             });
 
