@@ -857,6 +857,9 @@ namespace MJC.forms.order
             var items = Session.PriceTiersModelObj.GetPriceTierItems();
             var priceTierItem = items[sku.PriceTierId];
 
+            int costCodeId = sku.CostCode.Value;
+            var salesCostCodeData = Session.SalesCostCodesModelObj.GetSalesCostCodeData(costCodeId);
+
             this.OrderItemData.Add(new OrderItem
             {
                 SkuId = sku.Id,
@@ -867,7 +870,7 @@ namespace MJC.forms.order
                 PriceTierCode = sku.PriceTier,
                 UnitPrice = sku.Price,
                 LineTotal = sku.Price * sku.Qty,
-                SC = sku.CostCode.ToString(),
+                SC = salesCostCodeData.scCode,
                 Quantity = sku.Qty > 0 ? sku.Qty : 1,
                 Tax = true,
                 BillAsLabor = true
