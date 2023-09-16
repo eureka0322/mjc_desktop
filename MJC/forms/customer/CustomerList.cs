@@ -168,6 +168,7 @@ namespace MJC.forms.customer
                 _navigateToForm(sender, e, LookupInvoiceModal);
                 this.Hide();
             };
+
             hkOrderEntry.GetButton().Click += (sender, e) =>
             {
                 int selectedCustomerId = 0;
@@ -184,6 +185,7 @@ namespace MJC.forms.customer
                 ProcessOrder processForm = new ProcessOrder(selectedCustomerId, 0);
                 _navigateToForm(sender, e, processForm);
             };
+
             hkArchivedCustomers.GetButton().Click += (sender, e) =>
             {
                 if (archievedView)

@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using MJC.model;
+using Intuit.Ipp.Core.Configuration;
 
 namespace MJC.forms.category
 {
@@ -60,9 +61,15 @@ namespace MJC.forms.category
                 selectedCategoryId = (int)row.Cells[0].Value;
 
                 bool refreshData = CategoriesModelObj.DeleteCategory(selectedCategoryId);
+                
                 if (refreshData)
                 {
                     LoadCategoryList();
+                    Messages.ShowInformation("The Category has been deleted.");
+                }
+                else
+                {
+                    Messages.ShowError("The Category could not be deleted.");
                 }
             };
             hkSelects.GetButton().Click += (sender, e) =>
@@ -154,17 +161,18 @@ namespace MJC.forms.category
               
                     List<KeyValuePair<string, double>> priceTierData = new List<KeyValuePair<string, double>>();
                     priceTierData = PriceTiersModelObj.GetPriceTierMargin(categoryData.id);
-
-                    DataGridViewRow newRow = CLGridRefer.Rows[rowIndex];
-                    newRow.Cells["id"].Value = categoryData.id;
-                    newRow.Cells["category"].Value = categoryData.categoryName;
-                    newRow.Cells["calculateAs"].Value = categoryData.calculateAs == 1 ? "Markup" : "Margin";
-
-                    foreach (KeyValuePair<string, double> pair in priceTierData)
+                    if (CLGridRefer.Rows.Count < rowIndex)
                     {
-                        newRow.Cells[pair.Key].Value = pair.Value;
+                        DataGridViewRow newRow = CLGridRefer.Rows[rowIndex];
+                        newRow.Cells["id"].Value = categoryData.id;
+                        newRow.Cells["category"].Value = categoryData.categoryName;
+                        newRow.Cells["calculateAs"].Value = categoryData.calculateAs == 1 ? "Markup" : "Margin";
+
+                        foreach (KeyValuePair<string, double> pair in priceTierData)
+                        {
+                            newRow.Cells[pair.Key].Value = pair.Value;
+                        }
                     }
-                    
                 }
             }
         }

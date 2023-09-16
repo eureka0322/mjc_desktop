@@ -28,6 +28,7 @@ namespace MJC.forms.order
         private HotkeyButton hkProfiler = new HotkeyButton("F8", "Profiler", Keys.F8);
         private HotkeyButton hkHeldOrdersForCustomer = new HotkeyButton("F9", "Held Orders for Customer", Keys.F9);
 
+        GridViewOrigin OrderEntryLookupGrid = new GridViewOrigin();
         private DataGridView OEGridRefer;
         private int OEGridSelectedIndex = 0;
 
@@ -43,8 +44,12 @@ namespace MJC.forms.order
             _initializeHKButtons(hkButtons);
             AddHotKeyEvents();
 
-            
-            InitGridFooter();
+            InitOrderItemsList();
+            //InitGridFooter();
+            this.VisibleChanged += (s, e) =>
+            {
+                //this.getcu();
+            };
 
             //ComboBox_SelectedIndexChanged(Customer.GetComboBox(), EventArgs.Empty);
         }
@@ -64,8 +69,8 @@ namespace MJC.forms.order
             };
             hkSelects.GetButton().Click += (s, e) =>
             {
-                int sRId = (int)OEGridRefer.SelectedRows[0].Cells[0].Value;
-                addProcessOrder(s, e, sRId);
+                int customerId = (int)OEGridRefer.SelectedRows[0].Cells[0].Value;
+                addProcessOrder(s, e, customerId);
             };
             hkOpenCustomer.GetButton().Click += (sender, e) =>
             {
@@ -114,7 +119,6 @@ namespace MJC.forms.order
 
         private void InitOrderItemsList()
         {
-            GridViewOrigin OrderEntryLookupGrid = new GridViewOrigin();
             OEGridRefer = OrderEntryLookupGrid.GetGrid();
             OEGridRefer.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(157, 196, 235);
             OEGridRefer.ColumnHeadersDefaultCellStyle.ForeColor = Color.FromArgb(31, 63, 96);
@@ -123,31 +127,8 @@ namespace MJC.forms.order
             OEGridRefer.Width = this.Width;
             OEGridRefer.Height = 745;
             OEGridRefer.AllowUserToAddRows = false;
-            OEGridRefer.Columns.Clear();
 
-            OEGridRefer.Columns.Add("id", "id");
-            OEGridRefer.Columns["id"].Visible = false;
-
-            OEGridRefer.Columns.Add("customerNumber", "Customer#");
-            OEGridRefer.Columns["customerNumber"].Width = 200;
-            //OEGridRefer.Columns["customerNumber"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
-
-            OEGridRefer.Columns.Add("customerName", "Name");
-            OEGridRefer.Columns["customerName"].Width = 300;
-
-            OEGridRefer.Columns.Add("address1", "Address");
-            OEGridRefer.Columns["address1"].Width = 500;
-
-            OEGridRefer.Columns.Add("city", "City");
-            OEGridRefer.Columns["city"].Width = 200;
-
-            OEGridRefer.Columns.Add("state", "State");
-            OEGridRefer.Columns["state"].Width = 200;
-
-            OEGridRefer.Columns.Add("zipcode", "Zip");
-            OEGridRefer.Columns["zipcode"].Width = 200;
-
-            OEGridRefer.EditingControlShowing += OEGridRefer_EditingControlShowing;
+            //OEGridRefer.EditingControlShowing += OEGridRefer_EditingControlShowing;
             this.OEGridRefer.CellDoubleClick += (s, e) =>
             {
                 int sRId = (int)OEGridRefer.SelectedRows[0].Cells[0].Value;
@@ -172,24 +153,22 @@ namespace MJC.forms.order
 
         public void LoadSKUList(bool keepSelection = true)
         {
-            OEGridRefer.Rows.Clear();
-
             DataTable dataTable = Session.CustomersModelObj.LoadCustomerTable();
 
-            foreach (DataRow row in dataTable.Rows)
-            {
-                int rowIndex = OEGridRefer.Rows.Add();
-                DataGridViewRow newRow = OEGridRefer.Rows[rowIndex];
-                newRow.Cells["id"].Value = row["id"];
-                newRow.Cells["customerNumber"].Value = row["customerNumber"];
-                newRow.Cells["customerName"].Value = row["displayName"];
-                newRow.Cells["address1"].Value = row["address1"];
-                newRow.Cells["city"].Value = row["city"];
-                newRow.Cells["state"].Value = row["state"];
-                newRow.Cells["zipcode"].Value = row["zipcode"];
-            }
-
-            var rows = OEGridRefer.Rows;
+            OEGridRefer.DataSource = dataTable;
+            OEGridRefer.Columns[0].Visible = false;
+            OEGridRefer.Columns[1].HeaderText = "Customer #";
+            OEGridRefer.Columns[1].Width = 200;
+            OEGridRefer.Columns[2].HeaderText = "Customer Name";
+            OEGridRefer.Columns[2].Width = 300;
+            OEGridRefer.Columns[3].HeaderText = "Address";
+            OEGridRefer.Columns[3].Width = 400;
+            OEGridRefer.Columns[4].HeaderText = "City";
+            OEGridRefer.Columns[4].Width = 200;
+            OEGridRefer.Columns[5].HeaderText = "State";
+            OEGridRefer.Columns[5].Width = 200;
+            OEGridRefer.Columns[6].HeaderText = "ZipCode";
+            OEGridRefer.Columns[6].Width = 200;
         }
 
         private void OEGridRefer_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
@@ -214,14 +193,6 @@ namespace MJC.forms.order
         private void OrderEntry_Load(object sender, EventArgs e)
         {
            
-        }
-
-        private void OrderEntry_Activated(object sender, EventArgs e)
-        {
-            InitOrderItemsList();
-
-
-
         }
 
         private void OrderEntry_Validated(object sender, EventArgs e)

@@ -46,7 +46,6 @@
             this.ClientSize = new System.Drawing.Size(800, 450);
             this.Name = "OrderEntry";
             this.Text = "OrderEntry";
-            this.Activated += new System.EventHandler(this.OrderEntry_Activated);
             this.Load += new System.EventHandler(this.OrderEntry_Load);
             this.Validated += new System.EventHandler(this.OrderEntry_Validated);
             this.ResumeLayout(false);

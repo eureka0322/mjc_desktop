@@ -48,12 +48,14 @@ namespace MJC.forms.order
         {
             hkAdds.GetButton().Click += (sender, e) =>
             {
+                if (HeldOrderRefer.SelectedRows.Count == 0) return;
+
                 int rowIndex = HeldOrderRefer.SelectedRows[0].Index;
                 DataGridViewRow row = HeldOrderRefer.Rows[rowIndex];
                 int customerId = (int)row.Cells[1].Value;
                 bool isAddNewOrderItem = true;
 
-                ProcessOrder processOrderModal = new ProcessOrder(0, 0, isAddNewOrderItem);
+                ProcessOrder processOrderModal = new ProcessOrder(customerId, 0, isAddNewOrderItem);
                 _navigateToForm(sender, e, processOrderModal);
                 this.Hide();
             };
@@ -75,7 +77,7 @@ namespace MJC.forms.order
                 int customerId = (int)row.Cells[1].Value;
                 int orderId = (int)row.Cells[0].Value;
 
-                ProcessOrder processOrderModal = new ProcessOrder(0, orderId);
+                ProcessOrder processOrderModal = new ProcessOrder(customerId, orderId);
                 _navigateToForm(sender, e, processOrderModal);
                 this.Hide();
             };

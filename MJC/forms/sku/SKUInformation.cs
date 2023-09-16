@@ -38,7 +38,7 @@ namespace MJC.forms.sku
         private FInputBox costCode = new FInputBox("Sales/Cost Code");
         private FInputBox assetAcct = new FInputBox("SKU Asset Acct");
 
-        private FCheckBox taxable = new FCheckBox("taxable");
+        private FCheckBox taxable = new FCheckBox("Taxable");
         private FCheckBox maintainQtys = new FCheckBox("Maintain Qtys");
         private FCheckBox allowDiscount = new FCheckBox("Allow discount");
         private FCheckBox commissionable = new FCheckBox("Commissionable");
@@ -306,16 +306,14 @@ namespace MJC.forms.sku
             recorderQty.GetTextBox().KeyPress += KeyValidateNumber;
             soldThisMonth.GetTextBox().KeyPress += KeyValidateNumber;
             soldYTD.GetTextBox().KeyPress += KeyValidateNumber;
-
-            orderForm.GetComboBox().DropDownStyle = ComboBoxStyle.DropDownList;
-
-
+            orderForm.GetComboBox().DropDownStyle = ComboBoxStyle.DropDown;
 
             List<KeyValuePair<int, string>> VendorsData = VendorsModelObj.GetVendorList();
             foreach (KeyValuePair<int, string> pair in VendorsData)
             {
                 orderForm.GetComboBox().Items.Add(new FComboBoxItem(pair.Key, pair.Value));
             }
+            if(orderForm.GetComboBox().Items.Count > 0) orderForm.GetComboBox().SelectedIndex = 0;
 
             string filter = "";
             var refreshData = PriceTiersModelObj.LoadPriceTierData(filter);
@@ -487,11 +485,19 @@ namespace MJC.forms.sku
                 this.SKUName.GetTextBox().Select();
                 return;
             }
+
             if (categoryCombo.GetComboBox().SelectedItem == null)
             {
                 Messages.ShowError("Please select a category.");
                 return;
             }
+
+            if (string.IsNullOrEmpty(costCode.GetTextBox().Text))
+            {
+                Messages.ShowError("You must provide a Sales Cost Code.");
+                return;
+            }
+
             FComboBoxItem seletedItem = (FComboBoxItem)categoryCombo.GetComboBox().SelectedItem;
 
             int i_category = seletedItem.Id;
@@ -545,7 +551,7 @@ namespace MJC.forms.sku
             if (!is_i_inv_value) i_inv_value = 0;
             if (s_sku_name == "")
             {
-                MessageBox.Show("Please fill String field.");
+                Messages.ShowError("You must provide a SKU #");
                 return;
             }
 
@@ -556,23 +562,32 @@ namespace MJC.forms.sku
                 double priceData; bool parse_succeed = double.TryParse(priceTiers[i].GetTextBox().Text, out priceData);
                 if (parse_succeed) priceTierDict.Add(priceTiers[i].GetId(), priceData);
             }
+
             string syncToken = "1";
             string qboSkuId = "3";
             bool hidden = false;
 
-            bool refreshData = false;
-            if (skuId == 0)
+            try
             {
-                refreshData = Session.SKUModelObj.AddSKU(s_sku_name, i_category, s_description, s_measurement_unit, i_weight, i_cost_code, i_asset_acct, b_taxable, b_maintain_qty, b_allow_discount, b_commissionable, i_order_from, d_last_sold, s_manufacturer, s_location, i_quantity, i_qty_allocated, i_qty_available, i_qty_critical, i_qty_reorder, i_sold_this_month, i_sold_ytd, b_freeze_prices, i_core_cost, i_inv_value, memo, priceTierDict, b_bill_as_Labor, syncToken, qboSkuId, hidden, b_editing_quantity);
+                bool refreshData = false;
+                if (skuId == 0)
+                {
+                    refreshData = Session.SKUModelObj.AddSKU(s_sku_name, i_category, s_description, s_measurement_unit, i_weight, i_cost_code, i_asset_acct, b_taxable, b_maintain_qty, b_allow_discount, b_commissionable, i_order_from, d_last_sold, s_manufacturer, s_location, i_quantity, i_qty_allocated, i_qty_available, i_qty_critical, i_qty_reorder, i_sold_this_month, i_sold_ytd, b_freeze_prices, i_core_cost, i_inv_value, memo, priceTierDict, b_bill_as_Labor, syncToken, qboSkuId, hidden, b_editing_quantity);
+                }
+                else refreshData = Session.SKUModelObj.UpdateSKU(s_sku_name, i_category, s_description, s_measurement_unit, i_weight, i_cost_code, i_asset_acct, b_taxable, b_maintain_qty, b_allow_discount, b_commissionable, i_order_from, d_last_sold, s_manufacturer, s_location, i_quantity, i_qty_allocated, i_qty_available, i_qty_critical, i_qty_reorder, i_sold_this_month, i_sold_ytd, b_freeze_prices, i_core_cost, i_inv_value, memo, priceTierDict, b_bill_as_Labor, b_editing_quantity, skuId);
+                string modeText = skuId == 0 ? "creating" : "updating";
+                if (refreshData)
+                {
+                    this.DialogResult = DialogResult.OK;
+                    this._navigateToPrev(sender, e);
+                }
+                else ShowError("A problem occurred while " + modeText + " the SKU.");
             }
-            else refreshData = Session.SKUModelObj.UpdateSKU(s_sku_name, i_category, s_description, s_measurement_unit, i_weight, i_cost_code, i_asset_acct, b_taxable, b_maintain_qty, b_allow_discount, b_commissionable, i_order_from, d_last_sold, s_manufacturer, s_location, i_quantity, i_qty_allocated, i_qty_available, i_qty_critical, i_qty_reorder, i_sold_this_month, i_sold_ytd, b_freeze_prices, i_core_cost, i_inv_value, memo, priceTierDict, b_bill_as_Labor, b_editing_quantity, skuId);
-            string modeText = skuId == 0 ? "creating" : "updating";
-            if (refreshData)
+            catch(Exception exception)
             {
-                this.DialogResult = DialogResult.OK;
-                this._navigateToPrev(sender, e);
+                ShowError("A problem occurred while saving the SKU the SKU.");
+                Sentry.SentrySdk.CaptureException(exception);
             }
-            else MessageBox.Show("An Error occured while " + modeText + " the vendor.");
         }
 
         private void Form_KeyDown(object sender, KeyEventArgs e)

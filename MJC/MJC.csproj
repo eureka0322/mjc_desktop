@@ -27,6 +27,7 @@
     <PackageReference Include="Antlr4.Runtime" Version="4.6.6" />
     <PackageReference Include="IppDotNetSdkForQuickBooksApiV3" Version="14.6.3.6" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.1988-prerelease" />
+    <PackageReference Include="ReportViewerCore.NETCore" Version="15.1.18" />
     <PackageReference Include="RestSharp" Version="110.2.0" />
     <PackageReference Include="Sentry" Version="3.39.0" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
@@ -61,6 +62,13 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <None Update="Tokens.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="reports\" />
   </ItemGroup>
 
 </Project>

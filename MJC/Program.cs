@@ -1,8 +1,16 @@
+using Microsoft.Reporting.NETCore;
 using MJC.common;
 using MJC.forms;
 using MJC.forms.login;
+using System.Collections;
+using System.Data;
 using System.Reflection;
-
+using MJC.model;
+using System.Diagnostics;
+using System.Drawing.Printing;
+using System.Data.SqlClient;
+using MJC.common;
+using MJC.config;
 
 namespace MJC
 {
@@ -12,6 +20,7 @@ namespace MJC
         ///  The main entry point for the application.
         /// </summary>
         /// 
+        // TODO: @Nobel, please move the following code to Sessions.
         public static bool permissionOrders { get; set; }
         public static bool permissionInventory { get; set; }
         public static bool permissionReceivables { get; set; }
@@ -36,15 +45,22 @@ namespace MJC
                 // Set TracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
                 // We recommend adjusting this value in production.
                 o.TracesSampleRate = 1.0;
+
+                o.Release = "mjc-desktop@v" + System.Reflection.Assembly.GetEntryAssembly().GetName().Version;
+#if DEBUG
+                o.Environment = "development";
+#else
+                o.Environment = "production";
+#endif
             });
             // Configure WinForms to throw exceptions so Sentry can capture them.
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException);
-           
+         
             ShowSplash();
 
             Login login = new Login();
             Application.Run(login);
-       }
+        }
 
         private static void ShowSplash()
         {

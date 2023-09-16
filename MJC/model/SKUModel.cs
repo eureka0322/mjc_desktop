@@ -143,6 +143,7 @@ namespace MJC.model
         public List<SKUDetail> SKUDataList { get; private set; }
         public List<SKUProfile> SKUProfileList { get; private set; }
         public List<SKUAllocation> SKUAllocationList { get; private set; }
+        public List<SKUOrderItem> SkuOrderItems { get; private set; }
 
         private SKUPricesModel SKUPricesModelObj = new SKUPricesModel();
         private CategoryPriceTierModel CategoryPriceModelObj = new CategoryPriceTierModel();
@@ -182,6 +183,8 @@ namespace MJC.model
                         double? price = null;
                         if (!row.IsNull("price"))
                             price = double.Parse(row["price"].ToString());
+                        if(price < 0)
+                            price = price * (-1);
                         string priceTier = row["priceTierCode"].ToString();
                         int priceTierId = int.Parse(row["priceTierId"].ToString());
                         string qboSkuId = row["qboSkuId"].ToString();
@@ -190,6 +193,8 @@ namespace MJC.model
                     }
                 }
             }
+
+            this.SkuOrderItems = skuList;
 
             return skuList;
         }

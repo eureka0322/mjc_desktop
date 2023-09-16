@@ -61,10 +61,6 @@ namespace MJC.forms
 
             RefreshQuickbooks(); 
             
-            System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
-            timer.Interval = 5000;
-            timer.Tick += new System.EventHandler(RefreshQBOAccessTokens);
-            timer.Start();
         }
 
         private async void RefreshQBOAccessTokens(object? sender, EventArgs e)

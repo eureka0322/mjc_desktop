@@ -50,12 +50,19 @@ namespace MJC.forms.login
                 UserData UserData = UserModelObj.getUserDataById(Username.GetTextBox().Text);
 
                 Session.LoggedIn = true;
+
+                // TODO: @Nobel, please move the following code to Sessions.
                 Program.permissionOrders = UserData.permissionOrders;
                 Program.permissionInventory = UserData.permissionInventory;
                 Program.permissionReceivables = UserData.permissionReceivables;
                 Program.permissionSetting = UserData.permissionSetting;
                 Program.permissionUsers = UserData.permissionUsers;
                 Program.permissionQuickBooks = UserData.permissionReceivables;
+
+                // TODO: This should be moved into a "Loading Data" screen.
+                Session.PriceTiersModelObj.LoadPriceTierData();
+                Session.SKUModelObj.LoadSKUData("", false);
+                Session.SKUModelObj.LoadSkuOrderItems();
 
                 Dashboard dashboard = new Dashboard();
                 dashboard.Show();

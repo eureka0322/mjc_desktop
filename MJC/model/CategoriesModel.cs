@@ -139,14 +139,21 @@ namespace MJC.model
 
                 using (var command = new SqlCommand())
                 {
-                    command.Connection = connection;
-                    //Get Total Number of Customers
-                    command.CommandText = "DELETE FROM dbo.Categories WHERE id = @Value1";
-                    command.Parameters.AddWithValue("@Value1", id);
+                    try
+                    {
+                        command.Connection = connection;
+                        //Get Total Number of Customers
+                        command.CommandText = "DELETE FROM dbo.Categories WHERE id = @Value1";
+                        command.Parameters.AddWithValue("@Value1", id);
 
-                    command.ExecuteNonQuery();
+                        command.ExecuteNonQuery();
 
-                    MessageBox.Show("The Category was deleted.");
+                    }
+                    catch(Exception ex)
+                    {
+                        Sentry.SentrySdk.CaptureException(ex);
+                        return false;
+                    }
                 }
 
                 return true;
