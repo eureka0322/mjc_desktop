@@ -24,7 +24,9 @@ namespace MJC.forms.order
         private FInputBox ResumeProcessing = new FInputBox("8)Resume Processing");
 
         private int saveFlage = 0;
-        public CloseOrderActions()
+        private int customerId = 0;
+        private int orderId = 0;
+        public CloseOrderActions(int cID = 0, int oId = 0)
         {
             InitializeComponent();
             //_setModalStyle2();
@@ -33,6 +35,8 @@ namespace MJC.forms.order
             InitForms();
 
             this.KeyDown += CloseOrderActions_KeyDown;
+            this.customerId = cID;
+            this.orderId = oId;
         }
 
         private void InitForms()
@@ -80,11 +84,23 @@ namespace MJC.forms.order
                 case Keys.D1:
                 case Keys.NumPad1:
                     this.saveFlage = 1;
+
+                    PaymentProcessing paymentProcessing1 = new PaymentProcessing(this.customerId, this.orderId);
+                    paymentProcessing1.Show();
+                    paymentProcessing1.FormClosed += async (ss, sargs) => {
+                        this.Close();
+                    };
                     this.Close();
                     break;
                 case Keys.D2:
                 case Keys.NumPad2:
                     this.saveFlage = 2;
+
+                    PaymentProcessing paymentProcessing2 = new PaymentProcessing(this.customerId, this.orderId);
+                    paymentProcessing2.Show();
+                    paymentProcessing2.FormClosed += async (ss, sargs) => {
+                        this.Close();
+                    };
                     this.Close();
                     break;
                 case Keys.D3:
