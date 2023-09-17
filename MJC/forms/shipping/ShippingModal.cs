@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using MJC.model;
 
 namespace MJC.forms
 {
@@ -23,58 +24,32 @@ namespace MJC.forms
         private GridViewOrigin shipCustListGrid = new GridViewOrigin();
         private DataGridView CLGridRefer;
 
-        public ShippingModal(int customerId = 0) : base("Ship to Cust#", "Enter a customer ship to information")
+        public string shippingAddress="";
+
+        int customerId = 0;
+
+        List<CustomerShipToData> customerShipedToList = new List<CustomerShipToData>();
+
+        public ShippingModal(int cID = 0, bool readOnly = false) : base("Ship to Cust#", "Enter a customer ship to information")
         {
             InitializeComponent();
             _initBasicSize();
-
-            HotkeyButton[] hkButtons = new HotkeyButton[4] { hkAdds, hkDeletes, hkEdits, hkPrevScreen };
-            _initializeHKButtons(hkButtons);
+            HotkeyButton[] hkButtons;
+            if (readOnly) hkButtons = new HotkeyButton[1] { hkEdits }; 
+            else hkButtons = new HotkeyButton[4] { hkAdds, hkDeletes, hkEdits, hkPrevScreen };
+            if(readOnly) _initializeHKButtons(hkButtons, false);
             AddHotKeyEvents();
 
-            InitCustomerList();
-
-            this.VisibleChanged += (s, e) =>
-            {
-                this.LoadCustomerList();
-            };
+            this.customerId = cID;
+            InitCustomerShiptoList();
         }
 
         private void AddHotKeyEvents()
         {
-            //hkAdds.GetButton().Click += (sender, e) =>
-            //{
-            //    this.Hide();
-            //    CustomerInformation detailModal = new CustomerInformation();
-            //    _navigateToForm(sender, e, detailModal);
-            //    //                if (detailModal.ShowDialog() == DialogResult.OK)
-            //    //                {
-            //    //                    LoadCustomerList("");
-            //    //                }
-            //};
-            //hkDeletes.GetButton().Click += (sender, e) =>
-            //{
-            //    int selectedCustomerId = 0;
-            //    if (CLGridRefer.SelectedRows.Count > 0)
-            //    {
-            //        foreach (DataGridViewRow row in CLGridRefer.SelectedRows)
-            //        {
-            //            selectedCustomerId = (int)row.Cells[0].Value;
-            //        }
-            //    }
-            //    bool refreshData = CustomersModelObj.DeleteCustomer(selectedCustomerId);
-            //    if (refreshData)
-            //    {
-            //        LoadCustomerList();
-            //    }
-            //};
-            //hkEdits.GetButton().Click += (sender, e) =>
-            //{
-            //    updateCustomer(sender, e);
-            //};
+
         }
 
-        private void InitCustomerList()
+        private void InitCustomerShiptoList()
         {
             CLGridRefer = shipCustListGrid.GetGrid();
             CLGridRefer.Location = new Point(0, 95);
@@ -84,54 +59,54 @@ namespace MJC.forms
             this.Controls.Add(CLGridRefer);
             this.CLGridRefer.CellDoubleClick += (sender, e) =>
             {
-                //updateCustomer(sender, e);
+                
             };
 
-            LoadCustomerList();
+            this.CLGridRefer.KeyDown += (s, e) =>
+            {
+                if(e.KeyCode == Keys.Enter)
+                {
+                    int selectedID = 0;
+                    if (CLGridRefer.SelectedRows.Count > 0)
+                    {
+                        foreach (DataGridViewRow row in CLGridRefer.Rows)
+                        {
+                            selectedID = (int)row.Cells[0].Value;
+                            shippingAddress = row.Cells[3].Value.ToString();
+                        }
+                        this.Close();
+                    }
+                }
+                if(e.KeyCode == Keys.Escape)
+                {
+                    this.Close();
+                }
+            };
+
+            LoadCustomerShipToList();
         }
 
-        private void LoadCustomerList()
+        private void LoadCustomerShipToList()
         {
-            //string filter = "";
-            //var refreshData = CustomersModelObj.LoadCustomerData(filter);
-            //if (refreshData)
-            //{
-            //    CLGridRefer.DataSource = CustomersModelObj.CustomerDataList;
-            //    CLGridRefer.Columns[0].Visible = false;
-            //    CLGridRefer.Columns[1].HeaderText = "Customer #";
-            //    CLGridRefer.Columns[1].Width = 300;
-            //    CLGridRefer.Columns[2].HeaderText = "Name";
-            //    CLGridRefer.Columns[2].Width = 300;
-            //    CLGridRefer.Columns[3].HeaderText = "Address";
-            //    CLGridRefer.Columns[3].Width = 500;
-            //    CLGridRefer.Columns[4].HeaderText = "City";
-            //    CLGridRefer.Columns[4].Width = 200;
-            //    CLGridRefer.Columns[5].HeaderText = "State";
-            //    CLGridRefer.Columns[5].Width = 200;
-            //    CLGridRefer.Columns[6].HeaderText = "Zipcode";
-            //    CLGridRefer.Columns[6].Width = 200;
-            //}
-        }
-
-        private void updateCustomer(object sender, EventArgs e)
-        {
-            //CustomerInformation detailModal = new CustomerInformation();
-
-            //if (CLGridRefer.Rows.Count > 0)
-            //{
-            //    int rowIndex = CLGridRefer.CurrentCell.RowIndex;
-            //    DataGridViewRow row = CLGridRefer.Rows[rowIndex];
-
-            //    int id = (int)row.Cells[0].Value;
-            //    this.Hide();
-            //    detailModal.setDetails(id);
-            //    _navigateToForm(sender, e, detailModal);
-
-            //    //            if (detailModal.ShowDialog() == DialogResult.OK)
-            //    //          {
-            //    //            LoadCustomerList();
-            //    //      }
-            //}
+            string filter = "";
+            customerShipedToList = Session.customerShipedModelObj.LoadCustomerShipTosNyCustomerId(filter, customerId);
+            CLGridRefer.DataSource = customerShipedToList;
+            if(customerShipedToList.Count>0 )
+            {
+                CLGridRefer.Columns[0].Visible = false;
+                CLGridRefer.Columns[1].HeaderText = "Name";
+                CLGridRefer.Columns[1].Width = 300;
+                CLGridRefer.Columns[2].HeaderText = "Address1";
+                CLGridRefer.Columns[2].Width = 300;
+                CLGridRefer.Columns[3].HeaderText = "Address2";
+                CLGridRefer.Columns[3].Width = 500;
+                CLGridRefer.Columns[4].HeaderText = "City";
+                CLGridRefer.Columns[4].Width = 200;
+                CLGridRefer.Columns[5].HeaderText = "State";
+                CLGridRefer.Columns[5].Width = 200;
+                CLGridRefer.Columns[6].HeaderText = "Zip";
+                CLGridRefer.Columns[6].Width = 200;
+            }
         }
     }
 }

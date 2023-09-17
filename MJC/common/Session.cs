@@ -43,6 +43,7 @@ namespace MJC.common
         public static CustomersModel CustomerModelObj = new CustomersModel();
         public static PaymentDetailModel PymtDetailModelObj = new PaymentDetailModel();
         public static OrderModel OrderModelObj = new OrderModel();
+        public static CustomerShipToModel customerShipedModelObj = new CustomerShipToModel();
     }
 
 }

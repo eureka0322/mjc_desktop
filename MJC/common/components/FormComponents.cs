@@ -13,7 +13,7 @@ namespace MJC.common.components
     public class ModalButton
     {
         private Button button;
-        private Label label;
+//        private Label label;
         protected Keys hotKey;
 
         public ModalButton(string text, Keys hotKey)
@@ -50,7 +50,7 @@ namespace MJC.common.components
         public void SetPosition(Point location)
         {
             button.Location = location;
-            label.Location = new Point(location.X + button.Width + 8, location.Y);
+//            label.Location = new Point(location.X + button.Width + 8, location.Y);
         }
     }
 
@@ -492,6 +492,33 @@ namespace MJC.common.components
             label.ForeColor = System.Drawing.Color.FromArgb(128, 255, 255);
             label.AutoSize = true;
             label.AutoSize = true;
+        }
+
+        public Label GetLabel()
+        {
+            return label;
+        }
+
+        public void SetPosition(Point location)
+        {
+            label.Location = location;
+        }
+    }
+
+    public class FLabel
+    {
+        private Label label;
+        public FLabel(string labeltext, int labelWidth = 200)
+        {
+            label = new Label();
+            label.Text = labeltext;
+
+            label.AutoSize = true;
+            label.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)));
+            label.BackColor = System.Drawing.Color.Transparent;
+            label.Font = new System.Drawing.Font("Segoe UI Semibold", 15.75F);
+            label.ForeColor = System.Drawing.Color.WhiteSmoke;
+            label.Size = new System.Drawing.Size(labelWidth, 31);
         }
 
         public Label GetLabel()

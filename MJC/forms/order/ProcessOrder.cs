@@ -53,7 +53,13 @@ namespace MJC.forms.order
         private bool changeDetected = true;
         private string searchKey;
         private decimal billAsLabor = 0;
-        
+
+        public static bool enableShipping = false;
+        public static string via = "";
+        public static bool fbo = false;
+        public static string salesman = "";
+        public static string shipTo = "";
+
         private List<OrderItem> OrderItemData = new List<OrderItem>();
         private List<SKUOrderItem> TotalSkuList = new List<SKUOrderItem>();
         private List<SKUOrderItem> SubSkuList = new List<SKUOrderItem>();
@@ -301,8 +307,12 @@ namespace MJC.forms.order
             hkShippingInformation.GetButton().Click += (sender, e) =>
             {
                 int customerId = this.customerId;
-                ShippingModal ShipInfoModal = new ShippingModal(customerId);
-                _navigateToForm(sender, e, ShipInfoModal);
+                ShippingInformation shippingInfoModal = new ShippingInformation(customerId);
+                this.Enabled = false;
+                shippingInfoModal.Show();
+                shippingInfoModal.FormClosed += (sender, e) => {
+                    this.Enabled = true;
+                };
             };
         }
 

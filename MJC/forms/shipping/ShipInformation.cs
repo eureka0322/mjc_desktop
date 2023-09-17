@@ -42,36 +42,7 @@ namespace MJC.forms
 
         private void AddHotKeyEvents()
         {
-            //hkAdds.GetButton().Click += (sender, e) =>
-            //{
-            //    this.Hide();
-            //    CustomerInformation detailModal = new CustomerInformation();
-            //    _navigateToForm(sender, e, detailModal);
-            //    //                if (detailModal.ShowDialog() == DialogResult.OK)
-            //    //                {
-            //    //                    LoadCustomerList("");
-            //    //                }
-            //};
-            //hkDeletes.GetButton().Click += (sender, e) =>
-            //{
-            //    int selectedCustomerId = 0;
-            //    if (CLGridRefer.SelectedRows.Count > 0)
-            //    {
-            //        foreach (DataGridViewRow row in CLGridRefer.SelectedRows)
-            //        {
-            //            selectedCustomerId = (int)row.Cells[0].Value;
-            //        }
-            //    }
-            //    bool refreshData = CustomersModelObj.DeleteCustomer(selectedCustomerId);
-            //    if (refreshData)
-            //    {
-            //        LoadCustomerList();
-            //    }
-            //};
-            //hkEdits.GetButton().Click += (sender, e) =>
-            //{
-            //    updateCustomer(sender, e);
-            //};
+
         }
 
         private void InitCustomerList()
