@@ -34,7 +34,14 @@ namespace MJC.common
         {
             InitializeComponent();
             _initBasicSize();
+
             this.Activated += GlobalLayout_Activated;
+            this.FormClosing += GlobalLayout_FormClosing;
+        }
+
+        private void GlobalLayout_FormClosing(object? sender, FormClosingEventArgs e)
+        {
+            e.Cancel = true;
         }
 
         private void GlobalLayout_Activated(object? sender, EventArgs e)

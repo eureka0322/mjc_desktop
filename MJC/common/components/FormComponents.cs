@@ -13,7 +13,6 @@ namespace MJC.common.components
     public class ModalButton
     {
         private Button button;
-        private Label label;
         protected Keys hotKey;
 
         public ModalButton(string text, Keys hotKey)
@@ -50,7 +49,6 @@ namespace MJC.common.components
         public void SetPosition(Point location)
         {
             button.Location = location;
-            label.Location = new Point(location.X + button.Width + 8, location.Y);
         }
     }
 

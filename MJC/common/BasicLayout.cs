@@ -109,13 +109,16 @@ namespace MJC.common
             this._header.Controls.Add(this._formTitle);
 
             //header/_companyName
+            var businessName = !string.IsNullOrEmpty(Session.SettingsModelObj.Settings.businessName) ? Session.SettingsModelObj.Settings.businessName : "DEFAULT COMPANY NAME";
+            businessName = businessName.Replace("&", "&&"); // Make sure we don't link with the & character.
+
             this._companyName = new System.Windows.Forms.Label();
             this._companyName.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this._companyName.AutoSize = true;
             this._companyName.BackColor = System.Drawing.Color.Transparent;
             this._companyName.Font = this._fontPoint4_1;
             this._companyName.ForeColor = this._textMainColor;
-            this._companyName.Text = !string.IsNullOrEmpty(Session.SettingsModelObj.Settings.businessName) ? Session.SettingsModelObj.Settings.businessName : "DEFAULT COMPANY NAME";
+            this._companyName.Text = businessName;
             this._companyName.TextAlign = System.Drawing.ContentAlignment.TopRight;
             this._header.Controls.Add(this._companyName);
             this._companyName.Location = new System.Drawing.Point(this.Width - this._companyName.Width - 30, 15);
@@ -179,7 +182,11 @@ namespace MJC.common
 
         public void Refresh()
         {
-            this._companyName.Text = !string.IsNullOrEmpty(Session.SettingsModelObj.Settings.businessName) ? Session.SettingsModelObj.Settings.businessName : "DEFAULT COMPANY NAME";
+            var businessName = !string.IsNullOrEmpty(Session.SettingsModelObj.Settings.businessName) ? Session.SettingsModelObj.Settings.businessName : "DEFAULT COMPANY NAME";
+            businessName = businessName.Replace("&", "&&"); // Make sure we don't link with the & character.
+
+            this._companyName.Text = businessName;
+            this._companyName.Location = new System.Drawing.Point(this.Width - this._companyName.Width - 30, 15);
         }
     }
 }
