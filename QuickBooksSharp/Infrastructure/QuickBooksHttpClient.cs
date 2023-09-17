@@ -75,27 +75,28 @@ namespace QuickBooksSharp
             //that is because request message cannot be reused
             bool isFirstTry = true;
 
-        send:
-            using (var request = makeRequest())
+            for ( ; ; )
             {
-                if (_accessToken != null)
-                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
-
-                var response = await _httpClient.SendAsync(request);
-
-                if (!response.IsSuccessStatusCode)
+                using (var request = makeRequest())
                 {
-                    var exception = new QuickBooksException(request, response, await response.Content.ReadAsStringAsync());
-                    if (isFirstTry && RateLimitBreachBehavior == RateLimitBreachBehavior.WaitAndRetryOnce && exception.IsRateLimit)
-                    {
-                        isFirstTry = false;
-                        await Task.Delay(TimeSpan.FromMinutes(1));
-                        goto send;
-                    }
-                    throw exception;
-                }
+                    if (_accessToken != null)
+                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
 
-                return response;
+                    var response = await _httpClient.SendAsync(request);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        var exception = new QuickBooksException(request, response, await response.Content.ReadAsStringAsync());
+                        if (isFirstTry && RateLimitBreachBehavior == RateLimitBreachBehavior.WaitAndRetryOnce && exception.IsRateLimit)
+                        {
+                            isFirstTry = false;
+                            await Task.Delay(TimeSpan.FromMinutes(1));
+                        }
+                        throw exception;
+                    }
+
+                    return response;
+                }
             }
         }
     }

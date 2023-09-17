@@ -1007,10 +1007,8 @@ namespace MJC.qbo
                         bool hidden = false;
                         bool billAslabor = false;
                         string? syncToken = item.SyncToken;
-                        foreach(var priceTier in Session.PriceTiersModelObj.PriceTierDataList)
-                        {
-                            priceTierDict.Add(priceTier.Id, priceTier.ProfitMargin);
-                        }
+
+                       
 
                         skuModelObj.AddSKU(skuName, category, desc, measurementUnit, weight, costCode, assetAccount, taxable, maintain_qty, allow_discount, commissionable, order_from, last_sold, manufacturer, location, quantity, qty_allocated, qty_available, critical_qty, reorder_qty, sold_this_month, sold_ytd, freeze_prices, core_cost, inv_value, memo, priceTierDict, billAslabor, syncToken, itemId, hidden, false);
                     }
