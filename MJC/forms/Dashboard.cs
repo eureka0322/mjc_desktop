@@ -76,12 +76,10 @@ namespace MJC.forms
             }
             if (DateTime.Now.Subtract(lastRefreshedQBO).TotalMinutes > 30)
             {
-                var token = string.IsNullOrEmpty(Session.SettingsModelObj.Settings.refreshToken) ? Session.SettingsModelObj.Settings.refreshToken : QboLocal.Tokens.RefreshToken;
-
-                if (!string.IsNullOrEmpty(token))
+                if (!string.IsNullOrEmpty(Session.SettingsModelObj.Settings.refreshToken))
                 {
                     Console.WriteLine("Refreshing QuickBooks Online Access Token");
-                    if (await QboLib.QboLocal.Reauthenticate(token))
+                    if (await QboLib.QboLocal.Reauthenticate(Session.SettingsModelObj.Settings.refreshToken))
                     {
                         Session.SettingsModelObj.Settings.accessToken = QboLocal.Tokens.AccessToken;
                         Session.SettingsModelObj.Settings.refreshToken = QboLocal.Tokens.RefreshToken;

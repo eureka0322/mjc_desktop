@@ -59,6 +59,11 @@ namespace MJC.forms.login
                 Program.permissionUsers = UserData.permissionUsers;
                 Program.permissionQuickBooks = UserData.permissionReceivables;
 
+                // TODO: This should be moved into a "Loading Data" screen.
+                Session.PriceTiersModelObj.LoadPriceTierData();
+                Session.SKUModelObj.LoadSKUData("", false);
+                Session.SKUModelObj.LoadSkuOrderItems();
+
                 Dashboard dashboard = new Dashboard();
                 dashboard.Show();
 

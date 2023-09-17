@@ -57,7 +57,6 @@ namespace MJC
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException);
          
             ShowSplash();
-            Session.Initialize();
 
             Login login = new Login();
             Application.Run(login);

@@ -28,10 +28,6 @@ namespace MJC.forms.order
 
         private int saveFlage = 0;
         public int orderId = 0;
-        public string sProcessedBy { get; set; }
-        public string sInvoiceDesc { get; set; }
-        public DateTime sDateShiped { get; set; }
-        public string sInvoiceNumber { get; set; }
 
         public Processing() : base("Processing")
         {
@@ -44,10 +40,10 @@ namespace MJC.forms.order
 
         public void setDetails()
         {
-            this.ProcessedBy.GetTextBox().Text = sProcessedBy;
-            this.InvoiceDesc.GetTextBox().Text = sInvoiceDesc;
-            if (sDateShiped >= new DateTime(1900, 1, 1) && sDateShiped <= new DateTime(2100, 12, 31)) this.DateShiped.GetDateTimePicker().Value = sDateShiped;
-            this.InvoiceNumber.GetTextBox().Text = sInvoiceNumber;
+            this.ProcessedBy.GetTextBox().Text = ProcessOrder.sProcessedBy;
+            this.InvoiceDesc.GetTextBox().Text = ProcessOrder.sInvoiceDesc;
+            if (ProcessOrder.sDateShiped >= new DateTime(1900, 1, 1) && ProcessOrder.sDateShiped <= new DateTime(2100, 12, 31)) this.DateShiped.GetDateTimePicker().Value = ProcessOrder.sDateShiped;
+            this.InvoiceNumber.GetTextBox().Text = ProcessOrder.sInvoiceNumber;
         }
 
         private void InitModalButtons()
@@ -65,10 +61,10 @@ namespace MJC.forms.order
         }
         private void next_button_Click(object sender, EventArgs e)
         {
-            sProcessedBy = this.ProcessedBy.GetTextBox().Text;
-            sInvoiceDesc = this.InvoiceDesc.GetTextBox().Text;
-            sDateShiped = this.DateShiped.GetDateTimePicker().Value;
-            sInvoiceNumber = this.InvoiceNumber.GetTextBox().Text;
+            ProcessOrder.sProcessedBy = this.ProcessedBy.GetTextBox().Text;
+            ProcessOrder.sInvoiceDesc = this.InvoiceDesc.GetTextBox().Text;
+            ProcessOrder.sDateShiped = this.DateShiped.GetDateTimePicker().Value;
+            ProcessOrder.sInvoiceNumber = this.InvoiceNumber.GetTextBox().Text;
             //            Session.OrderModelObj.UpdateProcessingDatabyId(processedBy, invoiceDesc, dateShiped, invoiceNumber, orderId);
 
             saveFlage = 2;

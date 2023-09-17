@@ -75,28 +75,27 @@ namespace QuickBooksSharp
             //that is because request message cannot be reused
             bool isFirstTry = true;
 
-            for ( ; ; )
+        send:
+            using (var request = makeRequest())
             {
-                using (var request = makeRequest())
+                if (_accessToken != null)
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
+
+                var response = await _httpClient.SendAsync(request);
+
+                if (!response.IsSuccessStatusCode)
                 {
-                    if (_accessToken != null)
-                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
-
-                    var response = await _httpClient.SendAsync(request);
-
-                    if (!response.IsSuccessStatusCode)
+                    var exception = new QuickBooksException(request, response, await response.Content.ReadAsStringAsync());
+                    if (isFirstTry && RateLimitBreachBehavior == RateLimitBreachBehavior.WaitAndRetryOnce && exception.IsRateLimit)
                     {
-                        var exception = new QuickBooksException(request, response, await response.Content.ReadAsStringAsync());
-                        if (isFirstTry && RateLimitBreachBehavior == RateLimitBreachBehavior.WaitAndRetryOnce && exception.IsRateLimit)
-                        {
-                            isFirstTry = false;
-                            await Task.Delay(TimeSpan.FromMinutes(1));
-                        }
-                        throw exception;
+                        isFirstTry = false;
+                        await Task.Delay(TimeSpan.FromMinutes(1));
+                        goto send;
                     }
-
-                    return response;
+                    throw exception;
                 }
+
+                return response;
             }
         }
     }

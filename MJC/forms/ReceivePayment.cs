@@ -71,24 +71,15 @@ namespace MJC.forms
                     DataGridViewRow row = ReceivePymtGridRefer.SelectedRows[0];
                     int orderId = int.Parse(row.Cells["id"].Value.ToString());
 
-                    try
-                    {
-                        QboApiService qboApiService = new QboApiService();
-                        bool res = await qboApiService.CreatePayment(customerId, customer.Name, customer.QboId, dateReceived, amtReceived, orderId);
+                    QboApiService qboApiService = new QboApiService();
+                    bool res = await qboApiService.CreatePayment(customerId, customer.Name, customer.QboId, dateReceived, amtReceived, orderId);
 
-                        if (res)
-                        {
-                            this.LoadPaymentList();
-                        }
-                    }
-                    catch(Exception exception)
+                    if (res)
                     {
-                        Sentry.SentrySdk.CaptureException(exception);
-                        Messages.ShowError("There was a problem creating the payment in QuickBooks. Please try again.");
+                        this.LoadPaymentList();
                     }
                 }
             };
-
             hkSearchCustomers.GetButton().Click += (sender, e) =>
             {
                 CustomerList customerListModal = new CustomerList();

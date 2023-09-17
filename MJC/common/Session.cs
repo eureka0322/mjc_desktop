@@ -43,46 +43,6 @@ namespace MJC.common
         public static CustomersModel CustomerModelObj = new CustomersModel();
         public static PaymentDetailModel PymtDetailModelObj = new PaymentDetailModel();
         public static OrderModel OrderModelObj = new OrderModel();
-        public static CustomerShipToModel customerShipedModelObj = new CustomerShipToModel();
-        public static Lazy<CustomerShipToModel> customerShipedModelLazyObj = new Lazy<CustomerShipToModel>();
-
-        public static void Initialize()
-        {
-            SettingsModelObj = new SystemSettingsModel();
-            SalesTaxModelObj = new SalesTaxCodeModel();
-            CustomersModelObj = new CustomersModel();
-            SKUModelObj = new SKUModel();
-            OrderItemModelObj = new OrderItemsModel();
-            InvoicesModelObj = new InvoicesModel();
-            paymentDetailModelObj = new PaymentDetailModel();
-            accountingModelObj = new AccountingModel();
-            VendorsModelObj = new VendorsModel();
-            VendorCostModelObj = new VendorCostsModel();
-            PriceTiersModelObj = new PriceTiersModel();
-            CategoriesModelObj = new CategoriesModel();
-            SKUPricesModelObj = new SKUPricesModel();
-            SalesTaxCodeModelObj = new SalesTaxCodeModel();
-            SubAssemblyModelObj = new SubAssemblyModel();
-            SKUSerialLotsModelObj = new SKUSerialLotsModel();
-            SKUQtyDiscountModelObj = new SKUQtyDiscountModel();
-            SKUCostModelObj = new SKUCostQtyModel();
-            SKUCostQtyModelObj = new SKUCostQtyModel();
-            SalesCostCodesModelObj = new SalesCostCodeModel();
-            PymtHistoryModelObj = new PaymentHistoryModel();
-            CustomerModelObj = new CustomersModel();
-            PymtDetailModelObj = new PaymentDetailModel();
-            OrderModelObj = new OrderModel();
-            customerShipedModelObj = new CustomerShipToModel();
-
-            // Pre-load all the data in the background
-            Task.Run(() =>
-            {
-                Session.SKUModelObj.LoadSkuOrderItems();
-                Session.SKUModelObj.LoadSKUData("", false);
-                Session.SalesCostCodesModelObj.LoadSalesCostCodeData();
-                Session.PriceTiersModelObj.LoadPriceTierData();
-            });
-        }
     }
 
 }
