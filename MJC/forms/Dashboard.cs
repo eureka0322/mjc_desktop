@@ -58,9 +58,13 @@ namespace MJC.forms
             SetLinkButtion();
 
             this.Activated += Dashboard_Activated;
-
+/*            
             RefreshQuickbooks(); 
             
+            System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
+            timer.Interval = 5000;
+            timer.Tick += new System.EventHandler(RefreshQBOAccessTokens);
+            timer.Start();*/
         }
 
         private async void RefreshQBOAccessTokens(object? sender, EventArgs e)
