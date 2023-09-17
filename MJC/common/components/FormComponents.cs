@@ -503,6 +503,33 @@ namespace MJC.common.components
         }
     }
 
+    public class FLabel
+    {
+        private Label label;
+        public FLabel(string labeltext, int labelWidth = 200)
+        {
+            label = new Label();
+            label.Text = labeltext;
+
+            label.AutoSize = true;
+            label.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)));
+            label.BackColor = System.Drawing.Color.Transparent;
+            label.Font = new System.Drawing.Font("Segoe UI Semibold", 15.75F);
+            label.ForeColor = System.Drawing.Color.WhiteSmoke;
+            label.Size = new System.Drawing.Size(labelWidth, 31);
+        }
+
+        public Label GetLabel()
+        {
+            return label;
+        }
+
+        public void SetPosition(Point location)
+        {
+            label.Location = location;
+        }
+    }
+
     public class FlabelConstant
     {
         private Label contant;

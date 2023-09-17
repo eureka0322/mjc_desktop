@@ -50,7 +50,6 @@ namespace MJC.forms
             InitInputBox();
 
             GetSettings();
-
         }
 
         private void SystemSettings_FormClosing(object? sender, FormClosingEventArgs e)
@@ -121,7 +120,6 @@ namespace MJC.forms
                     break;
                 }
             }
-
 
             ProcessingTax.GetComboBox().DropDownStyle = ComboBoxStyle.DropDownList;
             ProcessingTax.GetComboBox().AutoCompleteMode = AutoCompleteMode.Suggest;

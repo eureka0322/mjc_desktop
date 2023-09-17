@@ -34,7 +34,6 @@ namespace MJC.forms.order
 
         private string searchKey;
 
-
         public OrderEntry() : base("Order Entry - Select a Customer", "Select a customer to start an order for")
         {
             InitializeComponent();
