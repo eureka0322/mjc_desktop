@@ -68,7 +68,7 @@ namespace MJC.forms
                     int selectedID = 0;
                     if (CLGridRefer.SelectedRows.Count > 0)
                     {
-                        foreach (DataGridViewRow row in CLGridRefer.SelectedRows)
+                        foreach (DataGridViewRow row in CLGridRefer.Rows)
                         {
                             selectedID = (int)row.Cells[0].Value;
                             shippingAddress = row.Cells[3].Value.ToString();
@@ -90,20 +90,22 @@ namespace MJC.forms
             string filter = "";
             customerShipedToList = Session.customerShipedModelObj.LoadCustomerShipTosNyCustomerId(filter, customerId);
             CLGridRefer.DataSource = customerShipedToList;
-
-            CLGridRefer.Columns[0].Visible = false;
-            CLGridRefer.Columns[1].HeaderText = "Name";
-            CLGridRefer.Columns[1].Width = 300;
-            CLGridRefer.Columns[2].HeaderText = "Address1";
-            CLGridRefer.Columns[2].Width = 300;
-            CLGridRefer.Columns[3].HeaderText = "Address2";
-            CLGridRefer.Columns[3].Width = 500;
-            CLGridRefer.Columns[4].HeaderText = "City";
-            CLGridRefer.Columns[4].Width = 200;
-            CLGridRefer.Columns[5].HeaderText = "State";
-            CLGridRefer.Columns[5].Width = 200;
-            CLGridRefer.Columns[6].HeaderText = "Zip";
-            CLGridRefer.Columns[6].Width = 200;
+            if (customerShipedToList.Count > 0)
+            {
+                CLGridRefer.Columns[0].Visible = false;
+                CLGridRefer.Columns[1].HeaderText = "Name";
+                CLGridRefer.Columns[1].Width = 300;
+                CLGridRefer.Columns[2].HeaderText = "Address1";
+                CLGridRefer.Columns[2].Width = 300;
+                CLGridRefer.Columns[3].HeaderText = "Address2";
+                CLGridRefer.Columns[3].Width = 500;
+                CLGridRefer.Columns[4].HeaderText = "City";
+                CLGridRefer.Columns[4].Width = 200;
+                CLGridRefer.Columns[5].HeaderText = "State";
+                CLGridRefer.Columns[5].Width = 200;
+                CLGridRefer.Columns[6].HeaderText = "Zip";
+                CLGridRefer.Columns[6].Width = 200;
+            }
         }
     }
 }

@@ -6,7 +6,6 @@ using System.Data;
 using MJC.forms.sku;
 using MJC.qbo;
 using System;
-using System.Windows.Forms;
 
 namespace MJC.forms.order
 {
@@ -14,7 +13,7 @@ namespace MJC.forms.order
     {
         private HotkeyButton hkAdds = new HotkeyButton("Ins", "Adds", Keys.Insert);
         private HotkeyButton hkDeletes = new HotkeyButton("Del", "Deletes", Keys.Delete);
-        private HotkeyButton hkEdit = new HotkeyButton("Enter", "Edits", Keys.Enter);
+        private HotkeyButton hkEdit = new HotkeyButton("Enter", "Edits", Keys.F6);
         private HotkeyButton hkSaveOrder = new HotkeyButton("F1", "Save Order", Keys.F1);
         private HotkeyButton hkAddMessage = new HotkeyButton("F2", "Add message", Keys.F2);
         private HotkeyButton hkCustomerProfiler = new HotkeyButton("F4", "Customer Profiler", Keys.F4);
@@ -77,7 +76,7 @@ namespace MJC.forms.order
             this.customerId = customerId;
             this.selectedOrderId = orderId;
             this.orderId = selectedOrderId;
-            
+
             if (this.selectedOrderId != 0)
             {
                 isNewOrder = false;
@@ -145,103 +144,122 @@ namespace MJC.forms.order
 
             hkCloseOrder.GetButton().Click += async (sender, e) =>
             {
-                CloseOrderActions CloseOrderActionsModal = new CloseOrderActions(this.customerId, this.orderId);
-                this.Enabled = false;
-                CloseOrderActionsModal.Show();
-                CloseOrderActionsModal.FormClosed += async (ss, sargs) =>
+                Processing processingModal = new Processing();
+                processingModal.Show();
+                processingModal.FormClosed += async (ss, args) =>
                 {
-                    this.Enabled = true;
-                    int saveFlag = CloseOrderActionsModal.GetSaveFlage();
+                    sProcessedBy = processingModal.sProcessedBy;
+                    sInvoiceDesc = processingModal.sInvoiceDesc;
+                    sDateShiped = processingModal.sDateShiped;
+                    sInvoiceNumber = processingModal.sInvoiceNumber;
 
-                    if (saveFlag == 7)
+                    int proFlag = processingModal.GetFlag();
+                    if (proFlag == 1)
                     {
-                        Session.OrderModelObj.DeleteOrder(orderId);
-
                         _navigateToPrev(sender, e);
                     }
-
-                    int status = 0;
-
-                    if (POGridRefer.Rows.Count > 0)
+                    if (proFlag == 2)
                     {
-                        int rowIndex = POGridRefer.SelectedRows[0].Index;
-                        DataGridViewRow row = POGridRefer.Rows[rowIndex];
-
-                        if (saveFlag != 0 && saveFlag != 7)
+                        CloseOrderActions CloseOrderActionsModal = new CloseOrderActions();
+                        this.Enabled = false;
+                        CloseOrderActionsModal.Show();
+                        CloseOrderActionsModal.FormClosed += async (ss, sargs) =>
                         {
-                            if (orderId != 0)
+                            this.Enabled = true;
+                            int saveFlag = CloseOrderActionsModal.GetSaveFlage();
+                            if (saveFlag == 7)
                             {
-                                if (saveFlag == 1)
-                                {
-                                    // Pay and Print
-                                    if (await CreateInvoice())
-                                    {
-                                        status = 3;
-                                        Session.OrderModelObj.UpdateOrderStatus(status, orderId);
-                                        printInvoice(orderId, status);
-                                        _navigateToPrev(sender, e);
-                                    }
-                                }
-                                else if (saveFlag == 2)
-                                {
-                                    // Pay and Don't Print
-                                    if (await CreateInvoice())
-                                    {
-                                        status = 3;
-                                        Session.OrderModelObj.UpdateOrderStatus(status, orderId);
+                                Session.OrderModelObj.DeleteOrder(orderId);
 
-                                        _navigateToPrev(sender, e);
-                                    }
-                                }
-                                else if (saveFlag == 3)
-                                {
-                                    status = 2;
-                                    Session.OrderModelObj.UpdateOrderStatus(status, orderId);
-                                    printInvoice(orderId, status);
+                                _navigateToPrev(sender, e);
+                            }
 
-                                    _navigateToPrev(sender, e);
-                                }
-                                else if (saveFlag == 4)
+                            int status = 0;
+
+                            if (POGridRefer.Rows.Count > 0)
+                            {
+                                int rowIndex = POGridRefer.SelectedRows[0].Index;
+                                DataGridViewRow row = POGridRefer.Rows[rowIndex];
+
+                                if (saveFlag != 0 && saveFlag != 7)
                                 {
-                                    if (await CreateInvoice())
+                                    if (orderId != 0)
                                     {
+                                        if (saveFlag == 1)
+                                        {
+                                            if (await CreateInvoice())
+                                            {
 
-                                        status = 2;
-                                        Session.OrderModelObj.UpdateOrderStatus(status, orderId);
-                                        printInvoice(orderId, status);
-                                        _navigateToPrev(sender, e);
+                                                status = 3;
+                                                Session.OrderModelObj.UpdateOrderStatus(status, orderId);
+                                                printInvoice(orderId, status);
+                                                _navigateToPrev(sender, e);
+                                            }
+                                        }
+                                        else if (saveFlag == 2)
+                                        {
+                                            if (await CreateInvoice())
+                                            {
+
+                                                status = 3;
+                                                Session.OrderModelObj.UpdateOrderStatus(status, orderId);
+                                                printInvoice(orderId, status);
+
+                                                _navigateToPrev(sender, e);
+                                            }
+                                        }
+                                        else if (saveFlag == 3)
+                                        {
+                                            status = 2;
+                                            Session.OrderModelObj.UpdateOrderStatus(status, orderId);
+                                            printInvoice(orderId, status);
+
+                                            _navigateToPrev(sender, e);
+                                        }
+                                        else if (saveFlag == 4)
+                                        {
+                                            if (await CreateInvoice())
+                                            {
+
+                                                status = 2;
+                                                Session.OrderModelObj.UpdateOrderStatus(status, orderId);
+                                                printInvoice(orderId, status);
+
+                                                _navigateToPrev(sender, e);
+                                            }
+                                        }
+                                        else if (saveFlag == 5)
+                                        {
+                                            status = 1;
+                                            Session.OrderModelObj.UpdateOrderStatus(status, orderId);
+                                            _navigateToPrev(sender, e);
+                                        }
+                                        else if (saveFlag == 6)
+                                        {
+                                            if (await CreateInvoice())
+                                            {
+                                                status = 1;
+                                                Session.OrderModelObj.UpdateOrderStatus(status, orderId);
+                                                printInvoice(orderId, status);
+                                                _navigateToPrev(sender, e);
+                                            }
+                                        }
+                                        else if (saveFlag == 7)
+                                        {
+                                            _navigateToPrev(sender, e);
+                                        }
+                                        else if (saveFlag == 8)
+                                        {
+
+                                        }
                                     }
-                                }
-                                else if (saveFlag == 5)
-                                {
-                                    status = 1;
-                                    Session.OrderModelObj.UpdateOrderStatus(status, orderId);
-                                    _navigateToPrev(sender, e);
-                                }
-                                else if (saveFlag == 6)
-                                {
-                                    if (await CreateInvoice())
+                                    else
                                     {
-                                        status = 1;
-                                        Session.OrderModelObj.UpdateOrderStatus(status, orderId);
-                                        printInvoice(orderId, status);
-                                        _navigateToPrev(sender, e);
+                                        //MessageBox.Show("Order info is not saved yet, please save order info first");
                                     }
-                                }
-                                else if (saveFlag == 7)
-                                {
-                                    _navigateToPrev(sender, e);
-                                }
-                                else if (saveFlag == 8)
-                                {
-
                                 }
                             }
-                            else
-                            {
-                                //MessageBox.Show("Order info is not saved yet, please save order info first");
-                            }
-                        }
+                        };
                     }
                 };
             };
@@ -351,7 +369,6 @@ namespace MJC.forms.order
                 Customer_ComBo.GetComboBox().SelectedValue = customerId;
             }
 
-
             LoadSelectedCustomerData();
 
             //Position.GetLabel().Focus();
@@ -374,9 +391,7 @@ namespace MJC.forms.order
                 else Terms.SetContext("N/A");
             }
 
-            if (POGridRefer != null)
-                LoadOrderItemList();
-
+            LoadOrderItemList();
             POGridRefer.Select();
         }
 
@@ -498,10 +513,10 @@ namespace MJC.forms.order
             var qtyInfo = Session.SKUModelObj.LoadSkuQty(skuId);
 
             SKUOrderItem sku = this.SubSkuList.FirstOrDefault(x => x.Id == skuId);
-            
+
             SalesTaxCodeModel salesTaxCodeModel = new SalesTaxCodeModel();
             salesTaxCodeModel.LoadSalesTaxCodeData("");
-             
+
             var items = Session.PriceTiersModelObj.GetPriceTierItems();
             var priceTierItem = items[sku.PriceTierId];
 
@@ -524,12 +539,12 @@ namespace MJC.forms.order
             var total = 0.00;
             var tax = 0.00;
 
-            foreach(var item in OrderItemData)
+            foreach (var item in OrderItemData)
             {
                 var _lineTotal = (item?.UnitPrice * item?.Quantity) ?? 0.00;
                 var _taxAmount = _lineTotal * (taxRate / 100);
                 double _billAsLabor = 0.0;
-                if(item.BillAsLabor == true)
+                if (item.BillAsLabor == true)
                 {
                     _billAsLabor = _lineTotal * (taxRate / 100);
                     this.billAsLabor += Convert.ToDecimal(_billAsLabor);
@@ -612,7 +627,7 @@ namespace MJC.forms.order
             POGridRefer.Columns[9].HeaderText = "Disc.";
             POGridRefer.Columns[9].Name = "PriceTierCode";
             POGridRefer.Columns[9].DataPropertyName = "priceTierCode";
-            POGridRefer.Columns[9].Width = 150;
+            POGridRefer.Columns[9].Width = 200;
 
             POGridRefer.Columns[10].HeaderText = "Unit Price";
             POGridRefer.Columns[10].DataPropertyName = "unitPrice";
@@ -635,12 +650,6 @@ namespace MJC.forms.order
             POGridRefer.Columns[13].Width = 200;
             POGridRefer.Columns[13].Visible = false;
 
-            POGridRefer.Columns[6].HeaderText = "Price Tier";
-            POGridRefer.Columns[6].Name = "PriceTier";
-            POGridRefer.Columns[6].DataPropertyName = "priceTier";
-            POGridRefer.Columns[6].Width = 200;
-            POGridRefer.Columns[6].Visible = false;
-
             POGridRefer.Columns[14].Visible = false;
 
             // TODO: SKUDataList is causing the form to load very slowly. Need to find a way to load this data faster.
@@ -655,8 +664,9 @@ namespace MJC.forms.order
             comboBoxColumn.AutoComplete = true;
             comboBoxColumn.DisplayIndex = 6;
             comboBoxColumn.DisplayStyle = DataGridViewComboBoxDisplayStyle.Nothing;
-            
-            int skuColumn = POGridRefer.Columns.Add(comboBoxColumn);
+
+            POGridRefer.Columns.Add(comboBoxColumn);
+            int columnIndex = POGridRefer.Columns.IndexOf(comboBoxColumn);
 
             // Tax ComboBox Column
             DataGridViewComboBoxColumn taxComboBoxColumn = new DataGridViewComboBoxColumn();
@@ -686,7 +696,6 @@ namespace MJC.forms.order
         {
             if (POGridRefer.SelectedRows.Count == 0) return;
 
-
             var selectedRow = POGridRefer.SelectedRows[0];
             int selectedValue = int.Parse(selectedRow.Cells["skuId"].Value.ToString());
 
@@ -703,8 +712,8 @@ namespace MJC.forms.order
 
         private void PoGridRefer_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
-            Console.WriteLine("PoGridRefer_CellValueChanged " + e.ColumnIndex);
             if (POGridRefer.SelectedRows.Count == 0) return;
+
             if (e.ColumnIndex == 8)
             {
                 DataGridViewRow selectedRow = POGridRefer.SelectedRows[0];
@@ -730,34 +739,29 @@ namespace MJC.forms.order
             }
             else
             // SKU Changed
-
             if (e.ColumnIndex == 15)
             {
                 DataGridViewComboBoxCell comboBoxCell = (DataGridViewComboBoxCell)POGridRefer.Rows[e.RowIndex].Cells[e.ColumnIndex];
                 int selectedValue = int.Parse(comboBoxCell.Value?.ToString());
                 DataGridViewRow selectedRow = POGridRefer.SelectedRows[0];
 
-                if (selectedValue != 0)
-                {
-                    var skuId = Session.SKUModelObj.SKUDataList.FirstOrDefault(item => item.Id == selectedValue).Id;
-                    SKUOrderItem sku = this.SubSkuList.Where(item => item.Id == skuId).ToList()[0];
-                    int costCodeId = sku.CostCode.Value;
-                    var salesCostCodeData = Session.SalesCostCodesModelObj.GetSalesCostCodeData(costCodeId);
+                var skuId = Session.SKUModelObj.SKUDataList.FirstOrDefault(item => item.Id == selectedValue).Id;
 
-                    selectedRow.Cells["sku"].Value = sku.Name;
-                    selectedRow.Cells["qboSkuId"].Value = sku.QboSkuId;
-                    selectedRow.Cells["description"].Value = sku.Description;
-                    //selectedRow.Cells["priceTier"].Value = sku.PriceTierId;
-                    selectedRow.Cells["unitPrice"].Value = sku.Price;
-                    selectedRow.Cells["lineTotal"].Value = sku.Price * sku.Qty;
-                    selectedRow.Cells["salesCode"].Value = salesCostCodeData.scCode;
-                    selectedRow.Cells["quantity"].Value = 1;
+                SKUOrderItem sku = this.SubSkuList.Where(item => item.Id == skuId).ToList()[0];
+                var salesCostCodeData = Session.SalesCostCodesModelObj.SalesCostCodeDataList.FirstOrDefault(x => x.id == sku.CostCode.Value);
 
-                    this.skuId = skuId;
+                selectedRow.Cells["sku"].Value = sku.Name;
+                selectedRow.Cells["qboSkuId"].Value = sku.QboSkuId;
+                selectedRow.Cells["description"].Value = sku.Description;
+                //selectedRow.Cells["priceTier"].Value = sku.PriceTierId;
+                selectedRow.Cells["unitPrice"].Value = sku.Price;
+                selectedRow.Cells["lineTotal"].Value = sku.Price * sku.Qty;
+                selectedRow.Cells["salesCode"].Value = salesCostCodeData.scCode;
+                selectedRow.Cells["quantity"].Value = 1;
 
-                    PopulateInformationField();
-                }
+                this.skuId = skuId;
 
+                PopulateInformationField();
             }
 
             changeDetected = true;
@@ -805,8 +809,6 @@ namespace MJC.forms.order
                     }
                     catch (Exception e)
                     {
-                        Sentry.SentrySdk.CaptureException(e);
-
                         if (e.Message.Contains("TOKEN"))
                         {
                             ShowError("The invoice could not be created: QuickBooks tokens.json was not found.");
@@ -863,13 +865,13 @@ namespace MJC.forms.order
             var items = Session.PriceTiersModelObj.PriceTierDataList;
             var priceTierItem = items[sku.PriceTierId];
             int costCodeId = sku.CostCode.Value;
-            this.skuId = sku.Id;
-
-            var skuData = Session.SKUModelObj.GetSKUData(sku.Id);
-            bool taxable = (bool)skuData[0].taxable;
-            bool billAsLabor = (bool)skuData[0].billAsLabor;
 
             var salesCostCodeData = Session.SalesCostCodesModelObj.GetSalesCostCodeData(costCodeId);
+
+            List<dynamic> skuData = new List<dynamic>();
+            skuData = Session.SKUModelObj.GetSKUData(sku.Id);
+            bool taxable = (bool)skuData[0].taxable;
+
             this.OrderItemData.Add(new OrderItem
             {
                 SkuId = sku.Id,
@@ -883,11 +885,13 @@ namespace MJC.forms.order
                 SC = salesCostCodeData.scCode,
                 Quantity = sku.Qty > 0 ? sku.Qty : 1,
                 Tax = taxable,
-                BillAsLabor = billAsLabor
+                BillAsLabor = true
             });
 
+
+            // TODO, Why do we need to reload this list?
             BindingList<OrderItem> dataList = new BindingList<OrderItem>(this.OrderItemData);
-            POGridRefer.DataSource = dataList;
+            POGridRefer.DataSource = dataList.ToList();
 
             int index = 0;
             foreach (DataGridViewRow row in POGridRefer.Rows)
@@ -978,7 +982,7 @@ namespace MJC.forms.order
             if (comboBox != null)
             {
                 comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
-                comboBox.AutoCompleteMode = AutoCompleteMode.Append;
+                comboBox.AutoCompleteMode = AutoCompleteMode.Suggest;
             }
         }
     }
