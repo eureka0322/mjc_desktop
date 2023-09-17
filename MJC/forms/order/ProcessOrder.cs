@@ -145,16 +145,17 @@ namespace MJC.forms.order
 
             hkCloseOrder.GetButton().Click += async (sender, e) =>
             {
-                CloseOrderActions CloseOrderActionsModal = new CloseOrderActions(customerId);
+                CloseOrderActions CloseOrderActionsModal = new CloseOrderActions(this.customerId, this.orderId);
                 this.Enabled = false;
                 CloseOrderActionsModal.Show();
                 CloseOrderActionsModal.FormClosed += async (ss, sargs) =>
                 {
                     this.Enabled = true;
                     int saveFlag = CloseOrderActionsModal.GetSaveFlage();
+
                     if (saveFlag == 7)
                     {
-                        //Session.OrderModelObj.DeleteOrder(orderId);
+                        Session.OrderModelObj.DeleteOrder(orderId);
 
                         _navigateToPrev(sender, e);
                     }

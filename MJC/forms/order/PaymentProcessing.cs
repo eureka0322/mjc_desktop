@@ -2,6 +2,8 @@
 using MJC.common;
 using MJC.model;
 using MJC.forms.customer;
+using MJC.qbo;
+using Antlr4.Runtime.Tree;
 
 namespace MJC.forms.order
 {
@@ -27,9 +29,14 @@ namespace MJC.forms.order
         private Button CompletePayment_button;
 
         private int orderItemId = 0;
+        private int orderId = 0;
         private int customerId = 0;
 
-        public PaymentProcessing(int cId = 0) : base("Payment Processing")
+        private double amountRemaining = 0;
+        private double change = 0;
+        private double totalPayment = 0;
+
+        public PaymentProcessing(int cId = 0, int oId = 0) : base("Payment Processing")
         {
             InitializeComponent();
 
@@ -43,6 +50,7 @@ namespace MJC.forms.order
             Cash.GetTextBox().Focus();
             Cash.GetTextBox().Select();
             this.customerId = cId;
+            this.orderId = oId;
         }
 
         private void InitMBOKButton()
@@ -73,19 +81,7 @@ namespace MJC.forms.order
 
             CARemaining.GetButton().Click += (sender, e) =>
             {
-                double cash = double.Parse(Cash.GetTextBox().Text.ToString());
-                double check = double.Parse(Check.GetTextBox().Text.ToString());
-                double freightCollect = double.Parse(FreightCollect.GetTextBox().Text.ToString());
-                double onAccount = double.Parse(OnAccount.GetTextBox().Text.ToString());
-                double cargeCard = double.Parse(CargeCard.GetTextBox().Text.ToString());
-                double discount = double.Parse(Discount.GetTextBox().Text.ToString());
-                double creditsApplied = double.Parse(CreditsApplied.GetTextBox().Text.ToString());
-
-                double totalPayment = cash + freightCollect + onAccount + cargeCard + discount + creditsApplied;
-                double orderTotal = 100.0;
-                double amountRemaining = orderTotal - totalPayment;
-                double change = -amountRemaining;
-
+                calcPayment();
                 AmountRemaining.GetTextBox().Text = amountRemaining.ToString();
                 Change.GetTextBox().Text = change.ToString();
             };
@@ -115,6 +111,24 @@ namespace MJC.forms.order
                 };
             };
 
+            CompletePayment.GetButton().Click += async (sender, e) =>
+            {
+                calcPayment();
+                try
+                {
+                    QboApiService qboApiService = new QboApiService();
+                    dynamic customerData = Session.CustomerModelObj.GetCustomerDataById(this.customerId);
+                    DateTime dateReceived = DateTime.Now;
+                    double amtReceived = amountRemaining;
+                    bool res = await qboApiService.CreatePayment(customerData.id, customerData.displayName, customerData.qbold, dateReceived, totalPayment, this.orderId);
+                }
+                catch (Exception exception)
+                {
+                    Sentry.SentrySdk.CaptureException(exception);
+                    Messages.ShowError("There was a problem creating the payment in QuickBooks. Please try again.");
+                }
+            };
+
             this.KeyDown += (s, e) =>
             {
                 if (e.KeyCode == Keys.F2)
@@ -134,6 +148,22 @@ namespace MJC.forms.order
                     CompletePayment.GetButton().PerformClick();
                 }
             };
+        }
+
+        private void calcPayment()
+        {
+            double cash = double.Parse(Cash.GetTextBox().Text.ToString());
+            bool isCheck = double.TryParse(Check.GetTextBox().Text.ToString(), out double check);
+            double freightCollect = double.Parse(FreightCollect.GetTextBox().Text.ToString());
+            double onAccount = double.Parse(OnAccount.GetTextBox().Text.ToString());
+            double cargeCard = double.Parse(CargeCard.GetTextBox().Text.ToString());
+            double discount = double.Parse(Discount.GetTextBox().Text.ToString());
+            double creditsApplied = double.Parse(CreditsApplied.GetTextBox().Text.ToString());
+            double orderTotal = 100.0;
+
+            totalPayment = cash + freightCollect + onAccount + cargeCard + discount + creditsApplied;
+            amountRemaining = orderTotal - totalPayment;
+            change = -amountRemaining;
         }
 
         private void InitInputBox()
@@ -255,6 +285,5 @@ namespace MJC.forms.order
             this.DialogResult = DialogResult.OK;
             this.Close();
         }
-
     }
 }
