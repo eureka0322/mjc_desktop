@@ -29,7 +29,6 @@ namespace MJC.common
             this.Activated += GlobalLayout_Activated;
         }
 
-
         public GlobalLayout(string title, string formDescription) : base(title, formDescription)
         {
             InitializeComponent();
