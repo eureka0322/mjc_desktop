@@ -743,17 +743,14 @@ namespace MJC.forms.order
                     int costCodeId = sku.CostCode.Value;
                     var salesCostCodeData = Session.SalesCostCodesModelObj.GetSalesCostCodeData(costCodeId);
 
-                SKUOrderItem sku = this.SubSkuList.Where(item => item.Id == skuId).ToList()[0];
-                var salesCostCodeData = Session.SalesCostCodesModelObj.SalesCostCodeDataList.FirstOrDefault(x => x.id == sku.CostCode.Value);
-
-                selectedRow.Cells["sku"].Value = sku.Name;
-                selectedRow.Cells["qboSkuId"].Value = sku.QboSkuId;
-                selectedRow.Cells["description"].Value = sku.Description;
-                //selectedRow.Cells["priceTier"].Value = sku.PriceTierId;
-                selectedRow.Cells["unitPrice"].Value = sku.Price;
-                selectedRow.Cells["lineTotal"].Value = sku.Price * sku.Qty;
-                selectedRow.Cells["salesCode"].Value = salesCostCodeData.scCode;
-                selectedRow.Cells["quantity"].Value = 1;
+                    selectedRow.Cells["sku"].Value = sku.Name;
+                    selectedRow.Cells["qboSkuId"].Value = sku.QboSkuId;
+                    selectedRow.Cells["description"].Value = sku.Description;
+                    //selectedRow.Cells["priceTier"].Value = sku.PriceTierId;
+                    selectedRow.Cells["unitPrice"].Value = sku.Price;
+                    selectedRow.Cells["lineTotal"].Value = sku.Price * sku.Qty;
+                    selectedRow.Cells["salesCode"].Value = salesCostCodeData.scCode;
+                    selectedRow.Cells["quantity"].Value = 1;
 
                     this.skuId = skuId;
 
