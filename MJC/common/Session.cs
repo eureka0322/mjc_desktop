@@ -44,6 +44,7 @@ namespace MJC.common
         public static PaymentDetailModel PymtDetailModelObj = new PaymentDetailModel();
         public static OrderModel OrderModelObj = new OrderModel();
         public static CustomerShipToModel customerShipedModelObj = new CustomerShipToModel();
+        public static CustomerCreditCardModel customerCreditCardModelObj = new CustomerCreditCardModel();
         public static Lazy<CustomerShipToModel> customerShipedModelLazyObj = new Lazy<CustomerShipToModel>();
 
         public static void Initialize()
@@ -73,6 +74,7 @@ namespace MJC.common
             PymtDetailModelObj = new PaymentDetailModel();
             OrderModelObj = new OrderModel();
             customerShipedModelObj = new CustomerShipToModel();
+            customerCreditCardModelObj = new CustomerCreditCardModel();
 
             // Pre-load all the data in the background
             Task.Run(() =>

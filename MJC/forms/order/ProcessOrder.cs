@@ -145,7 +145,7 @@ namespace MJC.forms.order
 
             hkCloseOrder.GetButton().Click += async (sender, e) =>
             {
-                CloseOrderActions CloseOrderActionsModal = new CloseOrderActions();
+                CloseOrderActions CloseOrderActionsModal = new CloseOrderActions(customerId);
                 this.Enabled = false;
                 CloseOrderActionsModal.Show();
                 CloseOrderActionsModal.FormClosed += async (ss, sargs) =>
