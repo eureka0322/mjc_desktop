@@ -37,9 +37,13 @@ namespace MJC.forms.order
         {
             InitializeComponent();
             this.Size = new Size(600, 350);
+
             InitForms();
             InitModalButtons();
             setDetails();
+
+            ProcessedBy.GetTextBox().Text = sProcessedBy;
+            InvoiceNumber.GetTextBox().Text = sInvoiceNumber;
         }
 
         public void setDetails()

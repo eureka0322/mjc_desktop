@@ -300,6 +300,28 @@ namespace MJC.qbo
                     int orderItemId = item.Id;
                     index += 1;
 
+                    SalesTaxCodeModel salesTaxCodeModel = new SalesTaxCodeModel();
+                    salesTaxCodeModel.LoadSalesTaxCodeData("");
+
+                    var taxCodeId = Session.SettingsModelObj.Settings.taxCodeId.GetValueOrDefault(2);
+                    var salesTaxCode = salesTaxCodeModel.GetSalesTaxCodeData(taxCodeId);
+                    var taxRate = salesTaxCode.rate;
+
+                    var _lineTotal = (item?.UnitPrice * item?.Quantity) ?? 0.00;
+                    var _taxAmount = _lineTotal * (taxRate / 100);
+                    double _billAsLabor = 0.0;
+                    if (item.BillAsLabor == true)
+                    {
+                        // NO Tax on Labor / Services 
+                        _billAsLabor = _lineTotal;
+                    }
+
+                    var _totalAmount = _taxAmount + _lineTotal + _billAsLabor;
+                    if (item?.Tax.GetValueOrDefault() ?? false)
+                    {
+                        tax = _taxAmount;
+                    }
+
                     if (orderItemId > 0)
                     {  
                         orderItemModelObj.UpdateOrderItem(skuId, qty, description, tax, priceTier, unitPrice, lineTotal, salesCode, sku, qboItemId, lineNum, createdBy, updatedBy, orderItemId);
@@ -325,7 +347,7 @@ namespace MJC.qbo
             }
         }
 
-        async public Task<bool> CreateInvoice(CustomerData customer, string invoiceNumber, List<OrderItem> itemList)
+        async public Task<bool> CreateInvoice(CustomerData customer, string invoiceNumber, List<OrderItem> itemList, string processedBy, string shippingTo = "test")
         {
             DataService dataService = new DataService(this.accessToken, this.realmId, useSandbox: false);
             
@@ -395,7 +417,8 @@ namespace MJC.qbo
                 double invoiceTotal = Convert.ToDouble(invoice.Balance);
                 string invoiceDesc = "";
 
-                int orderId = orderModelObj.CreateOrder(customer.Id, customer.Name, "", invoiceNumber, invoiceDate, invoiceDesc, invoiceTotal, invoice.SyncToken, invoice.Id, 1, 1);
+
+                int orderId = orderModelObj.CreateOrder(customer.Id, customer.Name, "terms", processedBy, shippingTo, invoiceNumber, invoiceDate, invoiceDesc, invoiceTotal, invoice.SyncToken, invoice.Id, 1, 1);
                 
                 Line[] items = invoice.Line;
                 index = 0;
@@ -431,7 +454,30 @@ namespace MJC.qbo
                     int lineNum = (int)item.LineNum;
                     int createdBy = 1;
                     int updatedBy = 1;
-                  
+
+                    SalesTaxCodeModel salesTaxCodeModel = new SalesTaxCodeModel();
+                    salesTaxCodeModel.LoadSalesTaxCodeData("");
+
+                    var taxCodeId = Session.SettingsModelObj.Settings.taxCodeId.GetValueOrDefault(2);
+                    var salesTaxCode = salesTaxCodeModel.GetSalesTaxCodeData(taxCodeId);
+                    var taxRate = salesTaxCode.rate;
+
+                    var _lineTotal = (itemList[index].UnitPrice * itemList[index].Quantity) ?? 0.00;
+                    double _billAsLabor = 0.0;
+                    double _taxAmount = 0.00;
+
+                    if (itemList[index].BillAsLabor == true)
+                    {
+                        // NO Tax on Labor / Services 
+                        _billAsLabor += _lineTotal;
+                    }
+                    else if (itemList[index].Tax.GetValueOrDefault())
+                    {
+                        _taxAmount = _lineTotal * (taxRate / 100);
+                    }
+                    
+                    lineTotal = _taxAmount + _lineTotal;
+
                     orderItemModelObj.CreateOrderItem(orderId, skuId, qty, description, message, tax, priceTier, unitPrice, lineTotal, salesCode, sku, qboSkuId, qboItemId, lineNum, createdBy, updatedBy);
                     //orderItemModelObj.UpdateOrderItemMessageById(message, orderId); 
                     
@@ -442,7 +488,7 @@ namespace MJC.qbo
             }
             catch (Exception exc)
             {
-                Sentry.SentrySdk.CaptureException(exc);
+                 Sentry.SentrySdk.CaptureException(exc);
 
                 throw;
             }
@@ -499,7 +545,14 @@ namespace MJC.qbo
             return false;
         }
 
-        async public void UpdateCustomer(string displayName, string givenName, string middleName, string familyName, string title, string suffix, string business_phone, string homePhone, string fax, string address1, string address2, string city, string state, string zipCode, string email, DateTime date_opened, string salesman, bool resale, string stmtCustomerNumber, string stmtName, int? priceTierId, string terms, string limit, string memo, bool taxable, bool send_stm, string core_tracking, decimal? coreBalance, string acct_type, bool print_core_tot, bool porequired, int? creditCodeId, decimal? interestRate, decimal? accountBalance, int? ytdPurchases, decimal? ytdInterest, DateTime last_date_purch, string qboId, string syncToken, int customerId, string customerNumber)
+        async public void UpdateCustomer(string displayName, string givenName, string middleName, string familyName, string title, string suffix, 
+            string business_phone, string homePhone, string fax, string address1, string address2, string city, 
+            string state, string zipCode, string email, DateTime date_opened, string salesman, 
+            bool resale, string stmtCustomerNumber, string stmtName, int? priceTierId, string terms, 
+            string limit, string memo, bool taxable, bool send_stm, string core_tracking, 
+            decimal? coreBalance, string acct_type, bool print_core_tot, bool porequired, 
+            int? creditCodeId, decimal? interestRate, decimal? accountBalance, int? ytdPurchases, 
+            decimal? ytdInterest, DateTime last_date_purch, string qboId, string syncToken, int customerId, string customerNumber)
         {
             DataService dataService = new DataService(this.accessToken, this.realmId, useSandbox: true);
             string m_qboId = qboId;

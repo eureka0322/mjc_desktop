@@ -87,6 +87,9 @@ namespace MJC.forms.order
             {
                 this.orderId = Session.OrderModelObj.GetNextOrderId();
             }
+            
+            sInvoiceNumber = $"INV-{orderId}";
+
 
             dynamic customer = Session.CustomersModelObj.GetCustomerDataById(customerId);
 //            this.TotalSkuList = Session.SKUModelObj.SkuOrderItems;
@@ -172,8 +175,8 @@ namespace MJC.forms.order
             var tempFile = Path.Combine(temporaryPath, @"\MJC", temporaryFile);
 
             File.WriteAllBytes(tempFile, pdf);
-
-            SendToPrinter(tempFile);
+            File.Copy(tempFile, "C:\\MJCtemp\\Report.pdf",true);
+            //SendToPrinter(tempFile);
         }
 
         public DataTable query(string sqlString)
@@ -216,10 +219,14 @@ namespace MJC.forms.order
             //{
             //    EditItem(s, e);
             //};
-
+            
             hkCloseOrder.GetButton().Click += async (sender, e) =>
             {
                 Processing processingModal = new Processing();
+                processingModal.sProcessedBy = sProcessedBy;
+                processingModal.sInvoiceNumber = sInvoiceNumber;
+                processingModal.setDetails();
+
                 processingModal.Show();
                 processingModal.FormClosed += async (ss, args) =>
                 {
@@ -235,7 +242,8 @@ namespace MJC.forms.order
                     }
                     if (proFlag == 2)
                     {
-                        CloseOrderActions CloseOrderActionsModal = new CloseOrderActions();
+                        double orderTotal = getAmtTotal();
+                        CloseOrderActions CloseOrderActionsModal = new CloseOrderActions(this.customerId, this.orderId, orderTotal);
                         this.Enabled = false;
                         CloseOrderActionsModal.Show();
                         CloseOrderActionsModal.FormClosed += async (ss, sargs) =>
@@ -575,7 +583,7 @@ namespace MJC.forms.order
         {
             this.skuId = SubSkuList[0].Id;
 
-            PopulateInformationField();
+            // PopulateInformationField();
         }
 
         private void PopulateInformationField()
@@ -620,7 +628,7 @@ namespace MJC.forms.order
                 double _billAsLabor = 0.0;
                 if (item.BillAsLabor == true)
                 {
-                    _billAsLabor = _lineTotal * (taxRate / 100);
+                    _billAsLabor = _lineTotal;
                     this.billAsLabor += Convert.ToDecimal(_billAsLabor);
                 }
 
@@ -767,6 +775,18 @@ namespace MJC.forms.order
             InsertItem(null, null);
         }
 
+        private double getAmtTotal()
+        {
+            double total = 0;
+            foreach (DataGridViewRow row in POGridRefer.Rows)
+            {
+                DataGridViewCell cell = row.Cells[11];
+                bool isConvert = double.TryParse(cell.Value.ToString(), out double val);
+                if(isConvert) total += val;
+            }
+            return total;
+        }
+
         private void POGridRefer_SelectionChanged(object? sender, EventArgs e)
         {
             if (POGridRefer.SelectedRows.Count == 0) return;
@@ -849,7 +869,7 @@ namespace MJC.forms.order
             CustomerData customer = (CustomerData)this.Customer_ComBo.GetComboBox().SelectedItem;
 
             // TODO: Change this to the Processing form values
-            string invoiceNumber = $"INV-{orderId}";
+            string invoiceNumber = sInvoiceNumber;
 
             if (orderItems.Count > 0)
             {
@@ -864,7 +884,7 @@ namespace MJC.forms.order
                     orderItems = orderItems.Where(item => item.OrderId == 0).ToList();
                     try
                     {
-                        bool res = await qboApiService.CreateInvoice(customer, invoiceNumber, orderItems);
+                        bool res = await qboApiService.CreateInvoice(customer, invoiceNumber, orderItems, sProcessedBy, shipTo);
 
                         if (res)
                         {

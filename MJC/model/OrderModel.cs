@@ -72,7 +72,7 @@ namespace MJC.model
             }
         }
 
-        public int CreateOrder(int customerId, string customerName, string terms, string invoiceNumber, DateTime invoiceDate, string invoiceDesc, double invoiceTotal, string syncToken, string qboOrderId, int createdBy = 1, int updatedBy = 1)
+        public int CreateOrder(int customerId, string customerName, string terms, string invoiceNumber, string processedBy, string shippingTo,  DateTime invoiceDate, string invoiceDesc, double invoiceTotal, string syncToken, string qboOrderId, int createdBy = 1, int updatedBy = 1)
         {
             using (var connection = GetConnection())
             {
@@ -83,7 +83,7 @@ namespace MJC.model
                 using (var command = new SqlCommand())
                 {
                     command.Connection = connection;
-                    command.CommandText = @"INSERT INTO dbo.Orders(customerId, customerName, creditCode, terms, invoiceNumber, invoiceDate, invoiceDesc, invoiceTotal, syncToken, qboOrderId, createdBy, updatedBy, active) OUTPUT INSERTED.id VALUES(@Value1, @Value2, @Value3, @Value4, @Value5, @Value6, @Value7, @Value8, @Value9, @Value10, @Value11, @Value12, @Value13)";
+                    command.CommandText = @"INSERT INTO dbo.Orders(customerId, customerName, creditCode, terms, invoiceNumber, invoiceDate, invoiceDesc, invoiceTotal, syncToken, qboOrderId, createdBy, updatedBy, active, processedBy, shipTo) OUTPUT INSERTED.id VALUES(@Value1, @Value2, @Value3, @Value4, @Value5, @Value6, @Value7, @Value8, @Value9, @Value10, @Value11, @Value12, @Value13, @Value14, @Value15)";
                     command.Parameters.AddWithValue("@Value1", customerId);
                     command.Parameters.AddWithValue("@Value2", customerName);
                     if (!string.IsNullOrEmpty(creditCode))
@@ -99,6 +99,8 @@ namespace MJC.model
                     command.Parameters.AddWithValue("@Value11", createdBy);
                     command.Parameters.AddWithValue("@Value12", updatedBy);
                     command.Parameters.AddWithValue("@Value13", 1);
+                    command.Parameters.AddWithValue("@Value14", processedBy);
+                    command.Parameters.AddWithValue("@Value15", shippingTo);
 
                     orderId = (int)command.ExecuteScalar();
                 }

@@ -43,7 +43,6 @@ namespace MJC.forms.order
             this.Controls.Add(Message.GetTextBox());
 
         }
-
         public void setDetails(int _id)
         {
             orderItemId = _id;
