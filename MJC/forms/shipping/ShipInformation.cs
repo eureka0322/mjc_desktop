@@ -41,6 +41,19 @@ namespace MJC.forms
 
             this.customerId = cID;
             InitCustomerShiptoList();
+            this.Load += OnLoadShipInformation;
+        }
+
+        private void OnLoadShipInformation(object sender, EventArgs e)
+        {
+            this.KeyDown += (s, e) =>
+            {
+                if (e.KeyCode == Keys.Escape)
+                {
+                    this.Hide();
+                }
+            };
+
         }
 
         private void AddHotKeyEvents()
@@ -71,14 +84,10 @@ namespace MJC.forms
                         foreach (DataGridViewRow row in CLGridRefer.Rows)
                         {
                             selectedID = (int)row.Cells[0].Value;
-                            shippingAddress = row.Cells[3].Value.ToString();
+                            shippingAddress = row.Cells[2].Value.ToString();
+                            this.Hide();
                         }
-                        this.Close();
                     }
-                }
-                if (e.KeyCode == Keys.Escape)
-                {
-                    this.Close();
                 }
             };
 

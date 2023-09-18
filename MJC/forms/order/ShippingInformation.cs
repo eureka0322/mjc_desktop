@@ -15,9 +15,9 @@ namespace MJC.forms.order
     public partial class ShippingInformation : BasicModal
     {
         private FCheckBox enableShipping = new FCheckBox("Enable Shipping");
-        private FInputBox shipVia = new FInputBox("Ship Via");
-        private FCheckBox fbo = new FCheckBox("FBO");
-        private FInputBox salesman = new FInputBox("Salesman");
+        private FInputBox shipVia = new FInputBox("Ship Via:");
+        private FCheckBox FOB = new FCheckBox("FOB");
+        private FInputBox salesman = new FInputBox("Salesman:");
         private FLabel shipTo = new FLabel("Ship to:");
         private ModalButton selectShippingAddress = new ModalButton("F2 Select Shipping Address", Keys.F2);
         private FLabel shippingAddressContent = new FLabel("[display selected shipping address here]");
@@ -25,6 +25,12 @@ namespace MJC.forms.order
         private ModalButton closeShippingInformation = new ModalButton("ESC Close Shipping Information", Keys.Escape);
 
         private int customerId = 0;
+        public bool sEnableShipping { get; set; }
+        public string sVia { get; set; }
+        public bool sFob { get; set; }
+        public string sSalesman { get; set; }
+        public string sShipTo { get; set; }
+
         public ShippingInformation(int cID = 0) : base("Shipping Information")
         {
             InitializeComponent();
@@ -41,11 +47,15 @@ namespace MJC.forms.order
                 }
             };
 
-            enableShipping.GetCheckBox().Checked = ProcessOrder.enableShipping;
-            shipVia.GetTextBox().Text = ProcessOrder.via;
-            fbo.GetCheckBox().Checked = ProcessOrder.fbo;
-            salesman.GetTextBox().Text = ProcessOrder.salesman;
-            shippingAddressContent.GetLabel().Text = ProcessOrder.shipTo;
+            setDetails();
+        }
+        public void setDetails()
+        {
+            this.enableShipping.GetCheckBox().Checked = sEnableShipping;
+            this.shipVia.GetTextBox().Text = sVia;
+            this.FOB.GetCheckBox().Checked = sFob;
+            this.shipVia.GetTextBox().Text = sSalesman;
+            this.shippingAddressContent.GetLabel().Text = sShipTo;
         }
 
         public void AddHotKeyEvents()
@@ -56,10 +66,14 @@ namespace MJC.forms.order
                 ShipInfoModal._prevForm = this;
                 this.Enabled = false;
                 ShipInfoModal.Show();
-                ShipInfoModal.FormClosed += (ss, sargs) =>
+                ShipInfoModal.VisibleChanged += (ss, sargs) =>
                 {
-                    shippingAddressContent.GetLabel().Text = ShipInfoModal.shippingAddress;
-                    this.Enabled = true;
+                    if (!ShipInfoModal.Visible)
+                    {
+                        shippingAddressContent.GetLabel().Text = ShipInfoModal.shippingAddress;
+                        ShipInfoModal.Close();
+                        this.Enabled = true;
+                    }
                 };
             };
 
@@ -70,11 +84,11 @@ namespace MJC.forms.order
 
             this.FormClosed += (s, e) =>
             {
-                ProcessOrder.enableShipping = enableShipping.GetCheckBox().Checked;
-                ProcessOrder.via = shipVia.GetTextBox().Text;
-                ProcessOrder.fbo = fbo.GetCheckBox().Checked;
-                ProcessOrder.salesman = salesman.GetTextBox().Text;
-                ProcessOrder.shipTo = shippingAddressContent.GetLabel().Text;
+                this.sEnableShipping = enableShipping.GetCheckBox().Checked;
+                this.sVia = shipVia.GetTextBox().Text;
+                this.sFob = FOB.GetCheckBox().Checked;
+                this.sSalesman = salesman.GetTextBox().Text;
+                this.sShipTo = shippingAddressContent.GetLabel().Text;
             };
         }
 
@@ -95,8 +109,8 @@ namespace MJC.forms.order
 
             yPos += yDistance;
 
-            fbo.SetPosition(new Point(xPos, yPos));
-            this.Controls.Add(fbo.GetCheckBox());
+            FOB.SetPosition(new Point(xPos, yPos));
+            this.Controls.Add(FOB.GetCheckBox());
 
             yPos += yDistance;
 

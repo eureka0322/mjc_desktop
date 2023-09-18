@@ -57,13 +57,13 @@ namespace MJC.forms.order
         public string sInvoiceDesc { get; set; }
         public DateTime sDateShiped { get; set; }
         public string sInvoiceNumber { get; set; }
-        public static bool enableShipping = false;
-        public static string via = "";
-        public static bool fbo = false;
-        public static string salesman = "";
-        public static string shipTo = "";
+        public bool sEnableShipping { get; set; }
+        public string sVia { get; set; }
+        public bool sFob { get; set; }
+        public string sSalesman { get; set; }
+        public string sShipTo { get; set; }
 
-        private List<OrderItem> OrderItemData = new List<OrderItem>();
+    private List<OrderItem> OrderItemData = new List<OrderItem>();
         private List<SKUOrderItem> SubSkuList = new List<SKUOrderItem>();
 
         private string Message;
@@ -884,7 +884,7 @@ namespace MJC.forms.order
                     orderItems = orderItems.Where(item => item.OrderId == 0).ToList();
                     try
                     {
-                        bool res = await qboApiService.CreateInvoice(customer, invoiceNumber, orderItems, sProcessedBy, shipTo);
+                        bool res = await qboApiService.CreateInvoice(customer, invoiceNumber, orderItems, sProcessedBy, sShipTo);
 
                         if (res)
                         {
@@ -928,6 +928,12 @@ namespace MJC.forms.order
                     sInvoiceDesc = selectedOrder.invoiceDesc;
                     sDateShiped = selectedOrder.dateShiped;
                     sInvoiceNumber = selectedOrder.invoiceNumber;
+
+                    sEnableShipping = true;
+                    sVia = selectedOrder.shipVia;
+                    sFob = selectedOrder.fob;
+                    sSalesman = selectedOrder.salesman;
+                    sShipTo = selectedOrder.shipTo;
 
                     bool res = await qboApiService.UpdateInvoice(customer, orderItems, selectedOrder);
                     if (res)
