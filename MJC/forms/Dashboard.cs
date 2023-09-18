@@ -76,7 +76,7 @@ namespace MJC.forms
             }
             if (DateTime.Now.Subtract(lastRefreshedQBO).TotalMinutes > 30)
             {
-                var token = string.IsNullOrEmpty(Session.SettingsModelObj.Settings.refreshToken) ? Session.SettingsModelObj.Settings.refreshToken : QboLocal.Tokens.RefreshToken;
+                var token = !string.IsNullOrEmpty(Session.SettingsModelObj.Settings.refreshToken) ? Session.SettingsModelObj.Settings.refreshToken : QboLocal.Tokens.RefreshToken;
 
                 if (!string.IsNullOrEmpty(token))
                 {
@@ -88,6 +88,11 @@ namespace MJC.forms
 
                         Session.SettingsModelObj.SaveSetting(Session.SettingsModelObj.Settings.taxCodeId, Session.SettingsModelObj.Settings.businessName, Session.SettingsModelObj.Settings.businessDescription, Session.SettingsModelObj.Settings.address1, Session.SettingsModelObj.Settings.address2, Session.SettingsModelObj.Settings.city, Session.SettingsModelObj.Settings.state, Session.SettingsModelObj.Settings.postalCode, Session.SettingsModelObj.Settings.phone, Session.SettingsModelObj.Settings.fax, Session.SettingsModelObj.Settings.ein, Session.SettingsModelObj.Settings.trainingEnabled, Session.SettingsModelObj.Settings.targetPrinter, Session.SettingsModelObj.Settings.accessToken, Session.SettingsModelObj.Settings.refreshToken, Session.SettingsModelObj.Settings.businessFooter, Session.SettingsModelObj.Settings.businessTermsOfService, Session.SettingsModelObj.Settings.invoicePrintQty.GetValueOrDefault(), Session.SettingsModelObj.Settings.holdOrderPrintQty.GetValueOrDefault(), Session.SettingsModelObj.Settings.quotePrintQty.GetValueOrDefault());
                         lastRefreshedQBO = DateTime.Now;
+                    }
+                    else
+                    {
+                        lastRefreshedQBO = DateTime.Now;
+                        MessageBox.Show("We were unable to authenticate with Quickbooks. Please ask your accounting department to reauthenticate and try again.");
                     }
                 }
             }

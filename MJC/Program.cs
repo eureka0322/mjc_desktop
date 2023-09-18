@@ -11,6 +11,7 @@ using System.Drawing.Printing;
 using System.Data.SqlClient;
 using MJC.common;
 using MJC.config;
+using System.IO;
 
 namespace MJC
 {
@@ -55,7 +56,7 @@ namespace MJC
             });
             // Configure WinForms to throw exceptions so Sentry can capture them.
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException);
-         
+
             ShowSplash();
             Session.Initialize();
 

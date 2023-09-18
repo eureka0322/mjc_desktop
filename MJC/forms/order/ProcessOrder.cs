@@ -6,6 +6,7 @@ using System.Data;
 using MJC.forms.sku;
 using MJC.qbo;
 using System;
+using System.Reflection;
 
 namespace MJC.forms.order
 {
@@ -120,14 +121,88 @@ namespace MJC.forms.order
 
         private void printInvoice(int orderId, int orderStatus)
         {
-            string totalSale = TotalSale.GetConstant().Text;
-            string taxValue = TaxPercent.GetConstant().Text;
-            string subTotal = Subtotal.GetConstant().Text;
-            string coreValue = "0.00";
-            string laborValue = this.billAsLabor.ToString("0.00");
-            OrderPrint orderPrint = new OrderPrint(orderId, orderStatus, subTotal, taxValue, laborValue, coreValue, totalSale);
-            orderPrint.PrintForm();
+            reportBuildAndPrint(orderId);
         }
+
+        private void reportBuildAndPrint(int tmpMasterOrderID = 1648)  //1648 is default for dev testing only, remove on prod
+        {
+            int masterOrderID = tmpMasterOrderID;
+
+            string totaltotal = TotalSale.GetConstant().Text;
+            string taxtotal = TaxPercent.GetConstant().Text;
+            string subtotal = Subtotal.GetConstant().Text;
+            string coretotal = "0.00";
+            string labortotal = this.billAsLabor.ToString("0.00");
+
+            /// Pull from populateinformationfield subroutine in best manner.  Helper integration imo.
+            /// [] To Couple
+            string status = "PICKING SLIP";  //setting default
+                                             //Testing of Report RDL(C Style)
+            Stream reportDefinition; // your RDLC from file or resource
+            System.Data.DataTable dataSource; // your datasource for the report
+            System.Data.DataTable dataSource2; // datasource for order totals
+            
+            dataSource = query("Select * from vwrptOrder Where MasterOrderID=" + masterOrderID.ToString());
+            if (dataSource.Rows.Count == 0) { 
+                return; 
+            }
+            if (dataSource.Rows[0]["statusID"].ToString() == "1") { status = "PICKING SLIP"; }
+            if (dataSource.Rows[0]["statusID"].ToString() == "2") { status = "QUOTE"; }
+            if (dataSource.Rows[0]["statusID"].ToString() == "3") { status = "INVOICE"; }
+            if (dataSource.Rows[0]["statusID"].ToString() == "4") { status = "HISTORICAL INVOICE"; }
+
+            dataSource2 = query("SELECT        id, '" + subtotal.ToString() + "' AS subtotal, '" + taxtotal.ToString() + "' AS taxtotal, '" + coretotal.ToString() + "' AS coretotal, '" + labortotal.ToString() + "' AS labortotal, '" + totaltotal.ToString() + "' AS totaltotal, '" + status + "' AS Expr1 FROM Orders");
+            
+            reportDefinition = System.IO.File.Open(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\reports\\rptInvoice.rdl", FileMode.Open);
+            Microsoft.Reporting.NETCore.LocalReport report = new Microsoft.Reporting.NETCore.LocalReport();
+            report.LoadReportDefinition(reportDefinition);
+            report.DataSources.Add(new Microsoft.Reporting.NETCore.ReportDataSource("DataSet1", dataSource));
+            report.DataSources.Add(new Microsoft.Reporting.NETCore.ReportDataSource("dataSet2", dataSource2));
+            report.SetParameters(new[] { new Microsoft.Reporting.NETCore.ReportParameter("MasterOrderID", masterOrderID.ToString()) });
+            byte[] pdf = report.Render("PDF");
+
+            var temporaryPath = Path.GetTempPath();
+            var temporaryFile = Path.GetTempFileName();
+
+            var path = Path.Combine(temporaryPath, @"\MJC");
+            if (!Directory.Exists(path)) { 
+                Directory.CreateDirectory(path); 
+            }
+
+            var tempFile = Path.Combine(temporaryPath, @"\MJC", temporaryFile);
+
+            File.WriteAllBytes(tempFile, pdf);
+
+            SendToPrinter(tempFile);
+        }
+
+        public DataTable query(string sqlString)
+        {
+            string connectionString = @"Server=tcp:mndSQL10.everleap.com; Initial Catalog=DB_7153_mjcdev; User ID=DB_7153_mjcdev_user; Password = Drew-Cubicle5-Guru; Integrated Security = False";
+            try
+            {
+                var da = new System.Data.SqlClient.SqlDataAdapter(sqlString, connectionString);
+                da.SelectCommand.CommandType = CommandType.Text;
+                System.Data.DataSet ds = new System.Data.DataSet();
+                da.Fill(ds, "MyTable");
+                DataTable queryResult = ds.Tables["MyTable"];
+                return queryResult;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+                return null/* TODO Change to default(_) if this is not a reference type */;
+            }
+        }
+
+        private void SendToPrinter(string Filepath)
+        {
+            var document = PdfiumViewer.PdfDocument.Load(Filepath);
+            // TODO: Not working
+            // document.CreatePrintDocument().PrinterSettings.PrinterName = "Microsoft Print to PDF";
+            document.CreatePrintDocument().Print();
+        }
+
 
         private void AddHotKeyEvents()
         {
@@ -189,7 +264,6 @@ namespace MJC.forms.order
                                         {
                                             if (await CreateInvoice())
                                             {
-
                                                 status = 3;
                                                 Session.OrderModelObj.UpdateOrderStatus(status, orderId);
                                                 printInvoice(orderId, status);
@@ -549,6 +623,7 @@ namespace MJC.forms.order
                     _billAsLabor = _lineTotal * (taxRate / 100);
                     this.billAsLabor += Convert.ToDecimal(_billAsLabor);
                 }
+
                 var _totalAmount = _taxAmount + _lineTotal + _billAsLabor;
                 total += _lineTotal;
                 if (item?.Tax.GetValueOrDefault() ?? false)
