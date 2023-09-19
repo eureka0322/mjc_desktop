@@ -21,6 +21,7 @@ namespace MJC.qbo
         private OrderItemsModel orderItemModelObj = new OrderItemsModel();
         private PaymentDetailModel PymtDetailModelObj = new PaymentDetailModel();
         private SKUModel skuModelObj = new SKUModel();
+        private const bool sandBox = false;
 
         public QboApiService()
         {
@@ -54,13 +55,9 @@ namespace MJC.qbo
             }
         }
 
-        public void RefreshToken()
-        {
-        }
-
         async public void CreateAccounting(string accountName, string acctNum, AccountTypeEnum acctType, string subAcctType)
         {
-            DataService dataService = new DataService(this.accessToken, this.realmId, useSandbox: true);
+            DataService dataService = new DataService(this.accessToken, this.realmId, useSandbox: sandBox);
 
             try
             {
@@ -86,7 +83,7 @@ namespace MJC.qbo
 
         async public void TestFunc()
         {
-            DataService dataService = new DataService(this.accessToken, this.realmId, useSandbox: true);
+            DataService dataService = new DataService(this.accessToken, this.realmId, useSandbox: sandBox);
 
             try
             {
@@ -107,7 +104,7 @@ namespace MJC.qbo
         
         async public void DeletePayment(string qboPaymentId, string syncToken, string customerId, string customerName, int paymentId)
         {
-            DataService dataService = new DataService(this.accessToken, this.realmId, useSandbox: true);
+            DataService dataService = new DataService(this.accessToken, this.realmId, useSandbox: sandBox);
 
             try
             {
@@ -136,7 +133,7 @@ namespace MJC.qbo
 
         async public Task<bool> CreatePayment(int customerId, string customerName, string qboCustomerId, DateTime dateReceived, double totalAmt, int orderId)
         {
-            DataService dataService = new DataService(this.accessToken, this.realmId, useSandbox: true);
+            DataService dataService = new DataService(this.accessToken, this.realmId, useSandbox: sandBox);
 
             try
             {
@@ -159,6 +156,7 @@ namespace MJC.qbo
                 string qboPaymentId = payment.Id;
                 string syncToken = payment.SyncToken;
                 int paymentId = PymtDetailModelObj.CreatePayment(customerId, dateReceived, totalAmt, syncToken, qboPaymentId);
+
                 int orderPaymentId = PymtDetailModelObj.CreateOrderPayment(orderId, paymentId, 1, 1);
 
                 return true;
@@ -177,7 +175,7 @@ namespace MJC.qbo
 
         async public void CreateProduct()
         {
-            DataService dataService = new DataService(this.accessToken, this.realmId, useSandbox: true);
+            DataService dataService = new DataService(this.accessToken, this.realmId, useSandbox: sandBox);
 
             try
             {
@@ -200,7 +198,7 @@ namespace MJC.qbo
         
         async public Task<bool> UpdateInvoice(CustomerData customer, List<OrderItem> itemList, dynamic order)
         {
-            DataService dataService = new DataService(this.accessToken, this.realmId, useSandbox: true);
+            DataService dataService = new DataService(this.accessToken, this.realmId, useSandbox: sandBox);
 
             try
             {
@@ -349,7 +347,7 @@ namespace MJC.qbo
 
         async public Task<bool> CreateInvoice(CustomerData customer, string invoiceNumber, List<OrderItem> itemList, string processedBy, int shippingTo)
         {
-            DataService dataService = new DataService(this.accessToken, this.realmId, useSandbox: false);
+            DataService dataService = new DataService(this.accessToken, this.realmId, useSandbox: sandBox);
             
             try
             {
@@ -496,7 +494,7 @@ namespace MJC.qbo
 
         async public Task<bool> CreateCustomer(string displayName, string givenName, string middleName, string familyName, string title, string suffix, string business_phone, string homePhone, string fax, string address1, string address2, string city, string state, string zipCode, string email, DateTime date_opened, string salesman, bool resale, string stmtCustomerNumber, string stmtName, int? priceTierId, string terms, string limit, string memo, bool taxable, bool send_stm, string core_tracking, decimal? coreBalance, string acct_type, bool print_core_tot, bool porequired, int? creditCodeId, decimal? interestRate, decimal? accountBalance, int? ytdPurchases, decimal? ytdInterest, DateTime last_date_purch, string customerNumber)
         {
-            DataService dataService = new DataService(this.accessToken, this.realmId, useSandbox: true);
+            DataService dataService = new DataService(this.accessToken, this.realmId, useSandbox: sandBox);
 
             try
             {
@@ -554,7 +552,7 @@ namespace MJC.qbo
             int? creditCodeId, decimal? interestRate, decimal? accountBalance, int? ytdPurchases, 
             decimal? ytdInterest, DateTime last_date_purch, string qboId, string syncToken, int customerId, string customerNumber)
         {
-            DataService dataService = new DataService(this.accessToken, this.realmId, useSandbox: true);
+            DataService dataService = new DataService(this.accessToken, this.realmId, useSandbox: sandBox);
             string m_qboId = qboId;
             string m_syncToken = syncToken;
             try
@@ -606,34 +604,33 @@ namespace MJC.qbo
 
         async public Task LoadCustomers()
         {
-            DataService dataService= new DataService(this.accessToken, this.realmId, useSandbox: false);
+            DataService dataService= new DataService(this.accessToken, this.realmId, useSandbox: sandBox);
 
             try
             {
-                //var result = await dataService.QueryAsync<Customer>("select * from Customer");
-                //var customers = result.Response.Entities;
-                
-                //if(customers != null)
-                //{
-                //    foreach (var customer in customers)
-                //    {
-                //        if (await DoesCustomerExist(customer))
-                //        {
-                //            UpdateCustomer(customer);
-                //        }
-                //        else
-                //        {
-                //            CreateNewCustomer(customer);
-                //        }
-
-                //    }
-                //}
-
-                Console.WriteLine("Customer is synchorized");
-                //LoadInvoices();
-                for (int i = 0; i < 94; i++)
+                for (int i = 0; i < 100; i++)
                 {
-                    LoadSKU(i);
+                    var statement = "select * from Customer ORDERBY Id StartPosition " + (i * 100)  + " MaxResults 100";
+                    var result = await dataService.QueryAsync<Customer>(statement);
+                    var customers = result.Response.Entities;
+
+                    if (customers != null)
+                    {
+                        foreach (var customer in customers)
+                        {
+                            if (await DoesCustomerExist(customer))
+                            {
+                                //UpdateCustomer(customer);
+                            }
+                            else
+                            {
+                                CreateNewCustomer(customer);
+                            }
+
+                        }
+                    }
+
+                    Console.WriteLine("Customer is synchorized");
                 }
 
             }
@@ -891,7 +888,7 @@ namespace MJC.qbo
 
         async public void LoadInvoices(int skuId = 0, int customerId1 = 0, double unitPrice = 0, int qty = 1)
         {
-            DataService dataService = new DataService(this.accessToken, this.realmId, useSandbox: false);
+            DataService dataService = new DataService(this.accessToken, this.realmId, useSandbox: sandBox);
             try
             {
                 var result = await dataService.QueryAsync<Invoice>("select * from Invoice");
@@ -1015,7 +1012,7 @@ namespace MJC.qbo
 
         async public void LoadSKU(int index = 0)
         {
-            DataService dataService = new DataService(this.accessToken, this.realmId, useSandbox: false);
+            DataService dataService = new DataService(this.accessToken, this.realmId, useSandbox: sandBox);
             try
             {
                 int startPosition = index * 100;

@@ -300,7 +300,9 @@ namespace MJC.forms.sku
             assetAcct.GetTextBox().KeyPress += KeyValidateNumber;
             manufacturer.GetTextBox().KeyPress += KeyValidateNumber;
             quantity.GetTextBox().KeyPress += KeyValidateNumber;
+            quantity.GetTextBox().KeyUp += AutoCalcQtyAv;
             qtyAllocated.GetTextBox().KeyPress += KeyValidateNumber;
+            qtyAllocated.GetTextBox().KeyUp += AutoCalcQtyAv;
             qtyAvaiable.GetTextBox().KeyPress += KeyValidateNumber;
             criticalQty.GetTextBox().KeyPress += KeyValidateNumber;
             recorderQty.GetTextBox().KeyPress += KeyValidateNumber;
@@ -313,7 +315,7 @@ namespace MJC.forms.sku
             {
                 orderForm.GetComboBox().Items.Add(new FComboBoxItem(pair.Key, pair.Value));
             }
-            if(orderForm.GetComboBox().Items.Count > 0) orderForm.GetComboBox().SelectedIndex = 0;
+            if (orderForm.GetComboBox().Items.Count > 0) orderForm.GetComboBox().SelectedIndex = 0;
 
             string filter = "";
             var refreshData = PriceTiersModelObj.LoadPriceTierData(filter);
@@ -463,6 +465,7 @@ namespace MJC.forms.sku
                 quantity.GetTextBox().Enabled = true;
                 qtyAllocated.GetTextBox().Enabled = true;
                 qtyAvaiable.GetTextBox().Enabled = true;
+                qtyAvaiable.GetTextBox().ReadOnly = true;
                 criticalQty.GetTextBox().Enabled = true;
                 recorderQty.GetTextBox().Enabled = true;
             }
@@ -583,7 +586,7 @@ namespace MJC.forms.sku
                 }
                 else ShowError("A problem occurred while " + modeText + " the SKU.");
             }
-            catch(Exception exception)
+            catch (Exception exception)
             {
                 ShowError("A problem occurred while saving the SKU the SKU.");
                 Sentry.SentrySdk.CaptureException(exception);
@@ -621,6 +624,24 @@ namespace MJC.forms.sku
                 e.Handled = true;
             }
         }
+
+        private void AutoCalcQtyAv(object sender, EventArgs e)
+        {
+            float QtyAmount = 0;
+            float QtyAllocatedAmount = 0;
+            if (float.TryParse(this.quantity.GetTextBox().Text, out float parsedQtyAmount))
+            {
+                QtyAmount = parsedQtyAmount;
+            }
+            if (float.TryParse(this.qtyAllocated.GetTextBox().Text, out float parsedQtyAllocatedAmount))
+            {
+                QtyAllocatedAmount = parsedQtyAllocatedAmount;
+            }
+
+            float QtyAvailableAmount = QtyAmount - QtyAllocatedAmount;
+            this.qtyAvaiable.GetTextBox().Text = QtyAvailableAmount.ToString();
+        }
+
 
         private void SKUInformation_Load(object sender, EventArgs e)
         {

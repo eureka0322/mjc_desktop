@@ -138,7 +138,6 @@ namespace MJC.model
 
                     int paymentId = (int)command.ExecuteScalar();
 
-                    MessageBox.Show("Payment is added successfully.");
                     return paymentId;
                 }
             }

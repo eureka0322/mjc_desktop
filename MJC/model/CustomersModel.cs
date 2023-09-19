@@ -365,6 +365,7 @@ namespace MJC.model
             }
         }
 
+
         public bool UpdateCustomerArchived(bool archived, int id)
         {
             using (var connection = GetConnection())

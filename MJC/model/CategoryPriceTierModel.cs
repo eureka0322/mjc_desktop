@@ -84,7 +84,7 @@ namespace MJC.model
                 {
                     command.Connection = connection;
                     
-                    command.CommandText = "Update dbo.CategoryPriceTiers SET margin = @Value1  WHERE categoryId = @Value2 AND priceTierId = @Value3";
+                    command.CommandText = "Update dbo.CategoryPriceTiers SET margin = @Value1 WHERE categoryId = @Value2 AND priceTierId = @Value3";
                     command.Parameters.AddWithValue("@Value1", _margin);
                     command.Parameters.AddWithValue("@Value2", _categoryId);
                     command.Parameters.AddWithValue("@Value3", _priceTierId);

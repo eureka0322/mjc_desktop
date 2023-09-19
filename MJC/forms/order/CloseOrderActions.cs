@@ -87,23 +87,32 @@ namespace MJC.forms.order
                 case Keys.NumPad1:
                     this.saveFlage = 1;
 
-                    PaymentProcessing paymentProcessing1 = new PaymentProcessing(this.customerId, this.orderId, this.orderTotal);
-                    paymentProcessing1.Show();
-                    paymentProcessing1.FormClosed += async (ss, sargs) => {
-                        this.Close();
-                    };
+                    //using (PaymentProcessing paymentProcessing = new PaymentProcessing(this.customerId, this.orderId, this.orderTotal))
+                    //{
+                    //    paymentProcessing.ShowDialog();
+                    //    paymentProcessing.FormClosed += async (ss, sargs) =>
+                    //    {
+                    //        this.Close();
+                    //    };
                     this.Close();
+                    //    return;
+                    //}
+
                     break;
                 case Keys.D2:
                 case Keys.NumPad2:
                     this.saveFlage = 2;
 
-                    PaymentProcessing paymentProcessing2 = new PaymentProcessing(this.customerId, this.orderId, this.orderTotal);
-                    paymentProcessing2.Show();
-                    paymentProcessing2.FormClosed += async (ss, sargs) => {
-                        this.Close();
-                    };
+                    //using (PaymentProcessing paymentProcessing = new PaymentProcessing(this.customerId, this.orderId, this.orderTotal))
+                    //{
+                    //    paymentProcessing.ShowDialog();
+                    //    paymentProcessing.FormClosed += async (ss, sargs) =>
+                    //    {
+                    //        this.Close();
+                    //    };
                     this.Close();
+                    //    return;
+                    //}
                     break;
                 case Keys.D3:
                 case Keys.NumPad3:

@@ -10,18 +10,18 @@ namespace MJC.forms.order
     public partial class PaymentProcessing : BasicModal
     {
         public FInputBox Cash = new FInputBox("Cash");
-        public FInputBox Check = new FInputBox("Check#");
+        public FInputBox Check = new FInputBox("Check #");
         public FInputBox FreightCollect = new FInputBox("Freight");
-        public FInputBox OnAccount = new FInputBox("OnAccount");
-        public FInputBox CargeCard = new FInputBox("CargeCard");
+        public FInputBox OnAccount = new FInputBox("On Account");
+        public FInputBox CargeCard = new FInputBox("Charge Card");
         public FInputBox Discount = new FInputBox("Discount");
-        public FInputBox CreditsApplied = new FInputBox("CreditsApplied");
+        public FInputBox CreditsApplied = new FInputBox("Credits Applied");
         public FInputBox Change = new FInputBox("Change");
         public FInputBox AmountRemaining = new FInputBox("Amount Remaining");
 
         private HotkeyButton CARemaining = new HotkeyButton("F2", "Calculate Amount Remaining", Keys.F2);
         private Button CARemaining_button;
-        private HotkeyButton CustomerInfo = new HotkeyButton("F3", "CustomerInfo", Keys.F3);
+        private HotkeyButton CustomerInfo = new HotkeyButton("F3", "Customer Info", Keys.F3);
         private Button CustomerInfo_button;
         private HotkeyButton CreditCards = new HotkeyButton("F6", "Credit Cards", Keys.F6);
         private Button CreditCards_button;
@@ -84,8 +84,6 @@ namespace MJC.forms.order
             CARemaining.GetButton().Click += (sender, e) =>
             {
                 calcPayment();
-                AmountRemaining.GetTextBox().Text = amountRemaining.ToString();
-                Change.GetTextBox().Text = change.ToString();
             };
 
             CustomerInfo.GetButton().Click += (sender, e) =>
@@ -116,19 +114,27 @@ namespace MJC.forms.order
             CompletePayment.GetButton().Click += async (sender, e) =>
             {
                 calcPayment();
+
                 try
                 {
                     QboApiService qboApiService = new QboApiService();
                     dynamic customerData = Session.CustomerModelObj.GetCustomerDataById(this.customerId);
                     DateTime dateReceived = DateTime.Now;
                     double amtReceived = double.Parse(totalPayment.ToString());
-                    bool res = await qboApiService.CreatePayment(customerData.id, customerData.displayName, customerData.qbold, dateReceived, amtReceived, this.orderId);
+
+                    int customerId = (int)customerData.id;
+                    var customerQboId = (int)customerData.qboId;
+                    var customerDisplayName = customerData.displayName ?? "";
+
+                    bool res = await qboApiService.CreatePayment(customerId, customerDisplayName, customerQboId.ToString(), dateReceived, amtReceived, this.orderId);
                 }
                 catch (Exception exception)
                 {
                     Sentry.SentrySdk.CaptureException(exception);
                     Messages.ShowError("There was a problem creating the payment in QuickBooks. Please try again.");
                 }
+
+                this.Close();
             };
 
             this.KeyDown += (s, e) =>
@@ -154,7 +160,6 @@ namespace MJC.forms.order
 
         private void calcPayment()
         {
-
             decimal cash = 0; decimal.TryParse(Cash.GetTextBox().Text.ToString(), out cash);
             decimal freightCollect = 0; decimal.TryParse(FreightCollect.GetTextBox().Text.ToString(), out freightCollect);
             decimal onAccount = 0;  decimal.TryParse(OnAccount.GetTextBox().Text.ToString(), out onAccount);
@@ -165,8 +170,20 @@ namespace MJC.forms.order
             totalPayment = cash + freightCollect + onAccount + cargeCard + discount + creditsApplied;
             amountRemaining = orderTotal - totalPayment;
 
-            amountRemaining = Math.Round(amountRemaining, 2);
-            change = Math.Abs(amountRemaining);
+            if (totalPayment > orderTotal)
+            {
+                // Change is due
+                change = Math.Abs(amountRemaining);
+                amountRemaining = 0;
+            }
+            else
+            {
+                amountRemaining = Math.Round(amountRemaining, 2);
+                change = 0;
+            }
+
+            AmountRemaining.GetTextBox().Text = amountRemaining.ToString("0.00");
+            Change.GetTextBox().Text = change.ToString("0.00");
         }
 
         private void InitInputBox()
