@@ -347,7 +347,7 @@ namespace MJC.qbo
             }
         }
 
-        async public Task<bool> CreateInvoice(CustomerData customer, string invoiceNumber, List<OrderItem> itemList, string processedBy, string shippingTo = "test")
+        async public Task<bool> CreateInvoice(CustomerData customer, string invoiceNumber, List<OrderItem> itemList, string processedBy, int shippingTo)
         {
             DataService dataService = new DataService(this.accessToken, this.realmId, useSandbox: false);
             
@@ -418,7 +418,7 @@ namespace MJC.qbo
                 string invoiceDesc = "";
 
 
-                int orderId = orderModelObj.CreateOrder(customer.Id, customer.Name, "terms", processedBy, shippingTo, invoiceNumber, invoiceDate, invoiceDesc, invoiceTotal, invoice.SyncToken, invoice.Id, 1, 1);
+                int orderId = orderModelObj.CreateOrder(customer.Id, customer.Name, "terms", processedBy, invoiceNumber, shippingTo, invoiceDate, invoiceDesc, invoiceTotal, invoice.SyncToken, invoice.Id, 1, 1);
                 
                 Line[] items = invoice.Line;
                 index = 0;

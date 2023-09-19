@@ -30,6 +30,7 @@ namespace MJC.forms.order
         public bool sFob { get; set; }
         public string sSalesman { get; set; }
         public string sShipTo { get; set; }
+        public int sShipID { get; set; }
 
         public ShippingInformation(int cID = 0) : base("Shipping Information")
         {
@@ -71,6 +72,7 @@ namespace MJC.forms.order
                     if (!ShipInfoModal.Visible)
                     {
                         shippingAddressContent.GetLabel().Text = ShipInfoModal.shippingAddress;
+                        sShipID = ShipInfoModal.selectedID;
                         ShipInfoModal.Close();
                         this.Enabled = true;
                     }

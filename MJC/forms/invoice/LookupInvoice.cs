@@ -201,6 +201,7 @@ namespace MJC.forms.invoice
             ILGridRefer.Columns[4].HeaderText = "Description";
             ILGridRefer.Columns[4].Width = 500;
             ILGridRefer.Columns[5].HeaderText = "Total";
+            ILGridRefer.Columns[5].DefaultCellStyle.Format = "0.00";
             ILGridRefer.Columns[5].Width = 200;
             ILGridRefer.Columns[6].HeaderText = "InvoiceBalance";
             ILGridRefer.Columns[6].Visible = false;

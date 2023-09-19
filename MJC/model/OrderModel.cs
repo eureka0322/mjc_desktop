@@ -72,7 +72,7 @@ namespace MJC.model
             }
         }
 
-        public int CreateOrder(int customerId, string customerName, string terms, string invoiceNumber, string processedBy, string shippingTo,  DateTime invoiceDate, string invoiceDesc, double invoiceTotal, string syncToken, string qboOrderId, int createdBy = 1, int updatedBy = 1)
+        public int CreateOrder(int customerId, string customerName, string terms, string invoiceNumber, string processedBy, int shippingTo,  DateTime invoiceDate, string invoiceDesc, double invoiceTotal, string syncToken, string qboOrderId, int createdBy = 1, int updatedBy = 1)
         {
             using (var connection = GetConnection())
             {

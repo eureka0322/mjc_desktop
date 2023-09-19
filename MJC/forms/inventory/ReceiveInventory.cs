@@ -12,6 +12,8 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using MJC.forms.price;
 using Antlr4.Runtime.Tree;
+using MJC.forms.customer;
+using MJC.forms.sku;
 
 namespace MJC.forms.inventory
 {
@@ -48,12 +50,31 @@ namespace MJC.forms.inventory
             AddHotKeyEvents();
 
             InitForms();
+            this.VisibleChanged += Reload;
         }
 
         private void AddHotKeyEvents()
         {
             hkReceiveInv.GetButton().Click += (sender, e) =>
             {
+                bool isConvertQty = int.TryParse(QtyReceived.GetTextBox().Text, out int qty);
+                bool isConvertTotalQty = int.TryParse(NewQtyOnHand.GetConstant().Text, out int totalQty);
+                bool isConvertCost = double.TryParse(NewCost.GetTextBox().Text, out double cost);
+                if (this.skuId == 0)
+                {
+                    MessageBox.Show("Please select the valid SKU");
+                    return;
+                }
+                if (!isConvertQty)
+                {
+                    MessageBox.Show("Please input the valid Qty value");
+                    return;
+                }
+                if (!isConvertCost)
+                {
+                    MessageBox.Show("Please input the valid Cost value");
+                    return;
+                }
                 InsertSKUCost();
             };
         }
@@ -70,9 +91,9 @@ namespace MJC.forms.inventory
 
             List<dynamic> FormComponents = new List<dynamic>();
 
-            List<KeyValuePair<int, string>> CustomerList = new List<KeyValuePair<int, string>>();
-            CustomerList = SkuModelObj.GetSKUNameList();
-            foreach (KeyValuePair<int, string> item in CustomerList)
+            List<KeyValuePair<int, string>> SKUList = new List<KeyValuePair<int, string>>();
+            SKUList = SkuModelObj.GetSKUNameList();
+            foreach (KeyValuePair<int, string> item in SKUList)
             {
                 int id = item.Key;
                 string name = item.Value;
@@ -121,6 +142,22 @@ namespace MJC.forms.inventory
             }
 
             _addFormInputs(FormComponents2, 750, 340, 800, 43, int.MaxValue, _panel.Controls);
+        }
+
+        private void Reload(object sender, EventArgs e)
+        {
+            List<KeyValuePair<int, string>> SKUList = new List<KeyValuePair<int, string>>();
+            SKUList = SkuModelObj.GetSKUNameList();
+            this.SKU.GetComboBox().Items.Clear();
+            foreach (KeyValuePair<int, string> item in SKUList)
+            {
+                int id = item.Key;
+                string name = item.Value;
+                SKU.GetComboBox().Items.Add(new FComboBoxItem(id, name));
+            }
+            if (this.SKU.GetComboBox().Items.Count > 0) this.SKU.GetComboBox().SelectedIndex = 0;
+            FComboBoxItem selectedItem = (FComboBoxItem)SKU.GetComboBox().SelectedItem;
+            int skuId = selectedItem.Id;
         }
 
         private void KeyValidateNumber(object sender, KeyPressEventArgs e)
@@ -190,8 +227,14 @@ namespace MJC.forms.inventory
 
             refreshData = SkuModelObj.UpdateSKUQty(totalQty, skuId);
 
-
-            ShowInformation("SKU Inventory updated successfully.");
+            if (refreshData)
+            {
+                ShowInformation("SKU Inventory updated successfully.");
+                QtyReceived.GetTextBox().Text = "";
+                NewCost.GetTextBox().Text = "";
+                OldQtyOnHand.SetContext(NewQtyOnHand.GetConstant().Text.ToString());
+                NewQtyOnHand.SetContext("0");
+            }
         }
 
         private void SKU_SelectedIndexChanged(object sender, EventArgs e)

@@ -62,8 +62,9 @@ namespace MJC.forms.order
         public bool sFob { get; set; }
         public string sSalesman { get; set; }
         public string sShipTo { get; set; }
+        public int sShipID { get; set; }
 
-    private List<OrderItem> OrderItemData = new List<OrderItem>();
+        private List<OrderItem> OrderItemData = new List<OrderItem>();
         private List<SKUOrderItem> SubSkuList = new List<SKUOrderItem>();
 
         private string Message;
@@ -414,6 +415,12 @@ namespace MJC.forms.order
                 this.Enabled = false;
                 shippingInfoModal.Show();
                 shippingInfoModal.FormClosed += (sender, e) => {
+                    this.sVia = shippingInfoModal.sVia;
+                    this.sFob = shippingInfoModal.sFob;
+                    this.sEnableShipping = shippingInfoModal.sEnableShipping;
+                    this.sSalesman = shippingInfoModal.sSalesman;
+                    this.sShipTo = shippingInfoModal.sShipTo;
+                    this.sShipID = shippingInfoModal.sShipID;
                     this.Enabled = true;
                 };
             };
@@ -884,7 +891,7 @@ namespace MJC.forms.order
                     orderItems = orderItems.Where(item => item.OrderId == 0).ToList();
                     try
                     {
-                        bool res = await qboApiService.CreateInvoice(customer, invoiceNumber, orderItems, sProcessedBy, sShipTo);
+                        bool res = await qboApiService.CreateInvoice(customer, invoiceNumber, orderItems, sProcessedBy, sShipID);
 
                         if (res)
                         {

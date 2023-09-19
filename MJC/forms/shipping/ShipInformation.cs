@@ -24,6 +24,7 @@ namespace MJC.forms
         private DataGridView CLGridRefer;
 
         public string shippingAddress = "";
+        public int selectedID = 0;
 
         int customerId = 0;
 
@@ -78,10 +79,9 @@ namespace MJC.forms
             {
                 if (e.KeyCode == Keys.Enter)
                 {
-                    int selectedID = 0;
                     if (CLGridRefer.SelectedRows.Count > 0)
                     {
-                        foreach (DataGridViewRow row in CLGridRefer.Rows)
+                        foreach (DataGridViewRow row in CLGridRefer.SelectedRows)
                         {
                             selectedID = (int)row.Cells[0].Value;
                             shippingAddress = row.Cells[2].Value.ToString();

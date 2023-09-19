@@ -32,10 +32,10 @@ namespace MJC.forms.order
         private int orderId = 0;
         private int customerId = 0;
 
-        private double amountRemaining = 0;
-        private double change = 0;
-        private double totalPayment = 0;
-        private double orderTotal = 0;
+        private decimal amountRemaining = 0;
+        private decimal change = 0;
+        private decimal totalPayment = 0;
+        private decimal orderTotal = 0;
 
         public PaymentProcessing(int cId = 0, int oId = 0, double oTotal = 0) : base("Payment Processing")
         {
@@ -52,7 +52,7 @@ namespace MJC.forms.order
             Cash.GetTextBox().Select();
             this.customerId = cId;
             this.orderId = oId;
-            this.orderTotal = oTotal;
+            this.orderTotal = decimal.Parse(oTotal.ToString());
         }
 
         private void InitMBOKButton()
@@ -121,8 +121,8 @@ namespace MJC.forms.order
                     QboApiService qboApiService = new QboApiService();
                     dynamic customerData = Session.CustomerModelObj.GetCustomerDataById(this.customerId);
                     DateTime dateReceived = DateTime.Now;
-                    double amtReceived = amountRemaining;
-                    bool res = await qboApiService.CreatePayment(customerData.id, customerData.displayName, customerData.qbold, dateReceived, totalPayment, this.orderId);
+                    double amtReceived = double.Parse(totalPayment.ToString());
+                    bool res = await qboApiService.CreatePayment(customerData.id, customerData.displayName, customerData.qbold, dateReceived, amtReceived, this.orderId);
                 }
                 catch (Exception exception)
                 {
@@ -154,17 +154,19 @@ namespace MJC.forms.order
 
         private void calcPayment()
         {
-            double cash = double.Parse(Cash.GetTextBox().Text.ToString());
-            bool isCheck = double.TryParse(Check.GetTextBox().Text.ToString(), out double check);
-            double freightCollect = double.Parse(FreightCollect.GetTextBox().Text.ToString());
-            double onAccount = double.Parse(OnAccount.GetTextBox().Text.ToString());
-            double cargeCard = double.Parse(CargeCard.GetTextBox().Text.ToString());
-            double discount = double.Parse(Discount.GetTextBox().Text.ToString());
-            double creditsApplied = double.Parse(CreditsApplied.GetTextBox().Text.ToString());
+
+            decimal cash = 0; decimal.TryParse(Cash.GetTextBox().Text.ToString(), out cash);
+            decimal freightCollect = 0; decimal.TryParse(FreightCollect.GetTextBox().Text.ToString(), out freightCollect);
+            decimal onAccount = 0;  decimal.TryParse(OnAccount.GetTextBox().Text.ToString(), out onAccount);
+            decimal cargeCard = 0; decimal.TryParse(CargeCard.GetTextBox().Text.ToString(), out cargeCard);
+            decimal discount = 0; decimal.TryParse(Discount.GetTextBox().Text.ToString(), out discount);
+            decimal creditsApplied = 0; decimal.TryParse(CreditsApplied.GetTextBox().Text.ToString(), out creditsApplied);
 
             totalPayment = cash + freightCollect + onAccount + cargeCard + discount + creditsApplied;
             amountRemaining = orderTotal - totalPayment;
-            change = -amountRemaining;
+
+            amountRemaining = Math.Round(amountRemaining, 2);
+            change = Math.Abs(amountRemaining);
         }
 
         private void InitInputBox()
@@ -182,7 +184,7 @@ namespace MJC.forms.order
             this.Controls.Add(Check.GetTextBox());
             Check.GetTextBox().TabIndex = 1;
             Check.GetTextBox().KeyPress += validateDouble;
-            Check.GetTextBox().LostFocus += validateNumber;
+//            Check.GetTextBox().LostFocus += validateNumber;
 
             FreightCollect.SetPosition(new Point(30, 130));
             this.Controls.Add(FreightCollect.GetLabel());
@@ -250,13 +252,18 @@ namespace MJC.forms.order
         private void validateNumber(object sender, EventArgs e)
         {
             TextBox box = (TextBox)sender;
-
-            if (!double.TryParse(box.Text, out double boxNumber))
+            if (box.Text.ToString() == "") return;
+            double boxNumber = 0;
+            if (!double.TryParse(box.Text, out boxNumber))
             {
                 Messages.ShowError("Please enter a valid Number.");
                 box.Select();
                 return;
             }
+            String[] str = box.Text.Split('.');
+            if(str.Length == 1) box.Text = boxNumber.ToString("F2");
+            if (str.Length>1 && str[1].Length <2) box.Text = boxNumber.ToString("F2");
+            return;
         }
 
         public void setDetails(int _id)
