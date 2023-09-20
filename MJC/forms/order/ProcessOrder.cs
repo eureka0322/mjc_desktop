@@ -29,7 +29,7 @@ namespace MJC.forms.order
         private FlabelConstant CustomerName = new FlabelConstant("Name:", 150);
         private FlabelConstant Terms = new FlabelConstant("Terms:", 150);
         //private FlabelConstant Zone = new FlabelConstant("Zone", 150);
-        // private FlabelConstant Position = new FlabelConstant("PO#:", 150);
+        private FlabelConstant Position = new FlabelConstant("PO#:", 150);
 
         private FlabelConstant Requested = new FlabelConstant("Requested:");
         private FlabelConstant Filled = new FlabelConstant("Filled:");
@@ -455,7 +455,7 @@ namespace MJC.forms.order
             FormComponents.Add(Terms);
             FormComponents.Add(ShipOrder);
             //FormComponents.Add(Zone);
-            // FormComponents.Add(Position);
+            FormComponents.Add(Position);
 
             _addFormInputs(FormComponents, 30, 110, 650, 42, 180);
 
@@ -477,7 +477,7 @@ namespace MJC.forms.order
 
             oldCustomerIndex = customerId;
 
-            //Position.GetLabel().Focus();
+            // Position.GetLabel().Focus();
             // POGridRefer.Select();
         }
 
@@ -503,6 +503,9 @@ namespace MJC.forms.order
 
                     if (customerData.terms != "") Terms.SetContext(customerData.terms);
                     else Terms.SetContext("N/A");
+
+                    if (customerData.poRequired != "") Position.SetContext(customerData.poRequired);
+                    else Position.SetContext("N/A");
                 }
             }
             LoadOrderItemList();

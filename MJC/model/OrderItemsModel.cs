@@ -95,6 +95,7 @@ namespace MJC.model
                     }
                     else
                     {
+                        if (sort == "") sort = "customerNumber";
                         command.CommandText = @"SELECT SKU.billAsLabor, tblOrderItem.* FROM SKU RIGHT JOIN (SELECT OrderItems.*, SalesCostCodes.scCode FROM OrderItems INNER JOIN
                                             (SELECT id FROM Orders WHERE customerId = @Value1) AS tblOrder ON tblOrder.id = OrderItems.orderId LEFT JOIN SalesCostCodes On SalesCostCodes.id = OrderItems.salesCode) AS tblOrderItem ON tblOrderItem.skuId = SKU.id" + sort;
 

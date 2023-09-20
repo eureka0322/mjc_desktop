@@ -435,7 +435,7 @@ namespace MJC.model
                     SqlDataReader reader;
 
                     command.CommandText = @"select id, customerNumber, customerName, address1, city, state, zipcode, email
-                                            from dbo.Customers where archived = @Value1";
+                                            from dbo.Customers where archived = @Value1 ORDER BY customerNumber";
                     command.Parameters.AddWithValue("@Value1", 1);
 
                     reader = command.ExecuteReader();

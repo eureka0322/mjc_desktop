@@ -212,7 +212,7 @@ namespace MJC.model
                     command.Connection = connection;
                     SqlDataReader reader;
 
-                    command.CommandText = @"select S_Table.id, sku, C_Table.categoryName, description, quantity, qtyAvailable, qtyAllocated from dbo.SKU as S_Table LEFT join dbo.Categories C_Table on category = C_Table.id";
+                    command.CommandText = @"select S_Table.id, sku, C_Table.categoryName, description, quantity, qtyAvailable, qtyAllocated from dbo.SKU as S_Table LEFT join dbo.Categories C_Table on category = C_Table.id ORDER BY S_Table.sku";
 
                     if (archived) command.CommandText += " where S_Table.archived = 1";
 
