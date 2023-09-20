@@ -1,5 +1,6 @@
 ﻿using MJC.forms.taxcode;
 using MJC.model;
+using MJC.qbo;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -46,6 +47,7 @@ namespace MJC.common
         public static CustomerShipToModel customerShipedModelObj = new CustomerShipToModel();
         public static CustomerCreditCardModel customerCreditCardModelObj = new CustomerCreditCardModel();
         public static Lazy<CustomerShipToModel> customerShipedModelLazyObj = new Lazy<CustomerShipToModel>();
+        public static QboApiService qboApiService = new QboApiService();
 
         public static void Initialize()
         {

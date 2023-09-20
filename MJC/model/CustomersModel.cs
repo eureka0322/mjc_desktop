@@ -17,8 +17,9 @@ namespace MJC.model
         public string Phone { get; set; }
         public string QboId { get; set; }
         public string Email { get; set; }
+        public string Terms { get; set; }
 
-        public CustomerData(int _id, string _num, string _name, string _address, string _city, string _state, string _phone, string _qboId, string _email)
+        public CustomerData(int _id, string _num, string _name, string _address, string _city, string _state, string _phone, string _qboId, string _email, string _terms)
         {
             Id = _id;
             Num = _num;
@@ -29,6 +30,7 @@ namespace MJC.model
             Phone = _phone;
             QboId = _qboId;
             Email = _email;
+            Terms = _terms;
         }
     }
 
@@ -52,12 +54,12 @@ namespace MJC.model
 
                     if (archived) whereClause += " AND archived = 1";
 
-                    command.CommandText = @"select id, customerNumber, displayName, address1, city, state, zipcode, qboId, email
+                    command.CommandText = @"select id, customerNumber, displayName, address1, city, state, zipcode, qboId, email, terms
                                             from dbo.Customers" + whereClause;
 
                     if (filter != "")
                     {
-                        command.CommandText = @"select id, customerNumber, displayName, address1, city, state, zipcode, qboId, email
+                        command.CommandText = @"select id, customerNumber, displayName, address1, city, state, zipcode, qboId, email, terms
                                                 from dbo.Customers
                                                 where customerNumber like @filter or displayName like @filter or address1 or city like @filter or state like @filter or zipcode like @filter";
                         command.Parameters.Add("@filter", System.Data.SqlDbType.VarChar).Value = "%" + filter + "%";
@@ -68,7 +70,7 @@ namespace MJC.model
                     while (reader.Read())
                     {
                         CustomerDataList.Add(
-                            new CustomerData((int)reader[0], reader[1].ToString(), reader[2].ToString(), reader[3].ToString(), reader[4].ToString(), reader[5].ToString(), reader[6].ToString(), reader[7].ToString(), reader[8].ToString())
+                            new CustomerData((int)reader[0], reader[1].ToString(), reader[2].ToString(), reader[3].ToString(), reader[4].ToString(), reader[5].ToString(), reader[6].ToString(), reader[7].ToString(), reader[8].ToString(), reader[9].ToString())
                         );
                     }
                     reader.Close();
@@ -434,15 +436,15 @@ namespace MJC.model
                     command.Connection = connection;
                     SqlDataReader reader;
 
-                    command.CommandText = @"select id, customerNumber, customerName, address1, city, state, zipcode, email
-                                            from dbo.Customers where archived = @Value1 ORDER BY customerNumber";
+                    command.CommandText = @"select id, customerNumber, customerName, address1, city, state, zipcode, email, terms
+                                            from dbo.Customers where archived = @Value1";
                     command.Parameters.AddWithValue("@Value1", 1);
 
                     reader = command.ExecuteReader();
                     while (reader.Read())
                     {
                         CustomerDataList.Add(
-                            new CustomerData((int)reader[0], reader[1].ToString(), reader[2].ToString(), reader[3].ToString(), reader[4].ToString(), reader[5].ToString(), reader[6].ToString(), reader[7].ToString(), reader[8].ToString())
+                            new CustomerData((int)reader[0], reader[1].ToString(), reader[2].ToString(), reader[3].ToString(), reader[4].ToString(), reader[5].ToString(), reader[6].ToString(), reader[7].ToString(), reader[8].ToString(), reader[9].ToString())
                         );
                     }
                     reader.Close();

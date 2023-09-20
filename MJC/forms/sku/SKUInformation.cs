@@ -309,7 +309,6 @@ namespace MJC.forms.sku
             soldThisMonth.GetTextBox().KeyPress += KeyValidateNumber;
             soldYTD.GetTextBox().KeyPress += KeyValidateNumber;
             orderForm.GetComboBox().DropDownStyle = ComboBoxStyle.DropDown;
-            orderForm.GetComboBox().AutoCompleteMode = AutoCompleteMode.SuggestAppend;
 
             List<KeyValuePair<int, string>> VendorsData = VendorsModelObj.GetVendorList();
             foreach (KeyValuePair<int, string> pair in VendorsData)

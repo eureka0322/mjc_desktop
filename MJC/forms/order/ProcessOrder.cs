@@ -8,6 +8,8 @@ using MJC.qbo;
 using System;
 using System.Reflection;
 using Microsoft.CodeAnalysis;
+using System.Security.Cryptography.Xml;
+using System.Linq;
 
 namespace MJC.forms.order
 {
@@ -241,7 +243,6 @@ namespace MJC.forms.order
                 sInvoiceDesc = processingModal.sInvoiceDesc;
                 sDateShiped = processingModal.sDateShiped;
                 sInvoiceNumber = processingModal.sInvoiceNumber;
-                MessageBox.Show(sProcessedBy);
 
                 int proFlag = processingModal.GetFlag();
                 if (proFlag == 1)
@@ -250,7 +251,6 @@ namespace MJC.forms.order
                 }
                 if (proFlag == 2)
                 {
-                    MessageBox.Show(sProcessedBy, "1");
                     double orderTotal = getAmtTotal();
                     CloseOrderActions CloseOrderActionsModal = new CloseOrderActions(this.customerId, this.orderId, orderTotal);
                     CloseOrderActionsModal.ShowDialog();
@@ -653,23 +653,27 @@ namespace MJC.forms.order
             var total = 0.00;
             var tax = 0.00;
 
+            double _billAsLabor = 0.0;
+            
             foreach (var item in OrderItemData)
             {
                 var _lineTotal = (item?.UnitPrice * item?.Quantity) ?? 0.00;
                 var _taxAmount = _lineTotal * (taxRate / 100);
-                double _billAsLabor = 0.0;
+
                 if (item.BillAsLabor == true)
                 {
-                    _billAsLabor = _lineTotal;
-                    this.billAsLabor += Convert.ToDecimal(_billAsLabor);
+                    _billAsLabor += _lineTotal;
+                    this.billAsLabor = Convert.ToDecimal(_billAsLabor);
                 }
-
-                var _totalAmount = _taxAmount + _lineTotal + _billAsLabor;
-                total += _lineTotal;
-                if (item?.Tax.GetValueOrDefault() ?? false)
+                else
                 {
-                    tax += _taxAmount;
+                    if (item?.Tax.GetValueOrDefault() ?? false)
+                    {
+                        tax += _taxAmount;
+                    }
                 }
+                var _totalAmount = tax + _lineTotal + _billAsLabor;
+                total += _lineTotal;
             }
 
             //var lineTotal = unitPrice * quantity;
@@ -775,6 +779,7 @@ namespace MJC.forms.order
             comboBoxColumn.HeaderText = "SKU#";
             comboBoxColumn.Width = 300;
             comboBoxColumn.Name = "skuNumber";
+            comboBoxColumn.MaxDropDownItems = 1;
             comboBoxColumn.DataPropertyName = "skuId";
             comboBoxColumn.ValueMember = "Id";
             comboBoxColumn.DisplayMember = "Name";
@@ -811,14 +816,40 @@ namespace MJC.forms.order
 
         private double getAmtTotal()
         {
-            double total = 0;
-            foreach (DataGridViewRow row in POGridRefer.Rows)
+            SalesTaxCodeModel salesTaxCodeModel = new SalesTaxCodeModel();
+            salesTaxCodeModel.LoadSalesTaxCodeData("");
+            // Make sure we have the default SKU #2 for tax code
+            var taxCodeId = Session.SettingsModelObj.Settings.taxCodeId.GetValueOrDefault(2);
+            var salesTaxCode = salesTaxCodeModel.GetSalesTaxCodeData(taxCodeId);
+            var taxRate = salesTaxCode.rate;
+
+            var total = 0.00;
+            var tax = 0.00;
+
+            double _billAsLabor = 0.0;
+            
+            foreach (var item in OrderItemData)
             {
-                DataGridViewCell cell = row.Cells[11];
-                bool isConvert = double.TryParse(cell.Value.ToString(), out double val);
-                if(isConvert) total += val;
+                var _lineTotal = (item?.UnitPrice * item?.Quantity) ?? 0.00;
+                var _taxAmount = _lineTotal * (taxRate / 100);
+
+                if (item.BillAsLabor == true)
+                {
+                    _billAsLabor += _lineTotal;
+                    this.billAsLabor = Convert.ToDecimal(_billAsLabor);
+                }
+                else
+                {
+                    if (item?.Tax.GetValueOrDefault() ?? false)
+                    {
+                        tax += _taxAmount;
+                    }
+                }
+                var _totalAmount = tax + _lineTotal + _billAsLabor;
+                total += _lineTotal;
             }
-            return total;
+
+            return total + tax;
         }
 
         private void POGridRefer_SelectionChanged(object? sender, EventArgs e)
@@ -900,7 +931,6 @@ namespace MJC.forms.order
         private async Task<bool> CreateInvoice()
         {
             List<OrderItem> orderItems = this.OrderItemData;
-            QboApiService qboApiService = new QboApiService();
             CustomerData customer = (CustomerData)this.Customer_ComBo.GetComboBox().SelectedItem;
 
             // TODO: Change this to the Processing form values
@@ -919,8 +949,7 @@ namespace MJC.forms.order
                     orderItems = orderItems.Where(item => item.OrderId == 0).ToList();
                     try
                     {
-                        MessageBox.Show(sProcessedBy.ToString(), "2");
-                        bool res = await qboApiService.CreateInvoice(customer, invoiceNumber, orderItems, sProcessedBy, sShipID);
+                        bool res = await Session.qboApiService.CreateInvoice(customer, invoiceNumber, orderItems, sProcessedBy, sShipID, sInvoiceDesc);
 
                         if (res)
                         {
@@ -948,7 +977,15 @@ namespace MJC.forms.order
                         {
                             ShowError("The invoice could not be created: QuickBooks needs to be reauthorized.");
                         }
-                        else if (e.Message.Contains("Validation"))
+                        else if (e.Message.Contains("Invalid Reference Id"))
+                        {
+                            ShowError("The invoice could not be created: There was an invalid item on the invoice.");
+                        }
+                        else if (e.Message.Contains("Invoice ID"))
+                        {
+                            ShowError("The invoice could not be created: The invoice number has already been used. Please change your invoice number and try again.");
+                        }
+                        else if (e.Message.Contains("ValidationX"))
                         {
                             ShowError("The invoice could not be created: QuickBooks needs to be reauthorized.");
                         }
@@ -975,7 +1012,7 @@ namespace MJC.forms.order
                     sSalesman = selectedOrder.salesman;
                     sShipTo = selectedOrder.shipTo;
 
-                    bool res = await qboApiService.UpdateInvoice(customer, orderItems, selectedOrder);
+                    bool res = await Session.qboApiService.UpdateInvoice(customer, orderItems, selectedOrder);
                     if (res)
                     {
                         LoadOrderItemList();
@@ -1049,9 +1086,9 @@ namespace MJC.forms.order
 
             if (POGridRefer.Rows.Count > 0)
             {
-                POGridRefer.CurrentCell = POGridRefer.Rows[POGridRefer.Rows.Count - 1].Cells[15];
+//               POGridRefer.CurrentCell = POGridRefer.Rows[POGridRefer.Rows.Count - 1].Cells[15];
                 POGridRefer.Select();
-                POGridRefer.BeginEdit(true);
+//               POGridRefer.BeginEdit(true);
             }
         }
 
@@ -1122,7 +1159,7 @@ namespace MJC.forms.order
             var comboBox = e.Control as DataGridViewComboBoxEditingControl;
             if (comboBox != null)
             {
-                comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+                comboBox.DropDownStyle = ComboBoxStyle.DropDown;
                 comboBox.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
             }
         }

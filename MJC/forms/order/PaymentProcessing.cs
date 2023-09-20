@@ -19,7 +19,7 @@ namespace MJC.forms.order
         public FInputBox Change = new FInputBox("Change");
         public FInputBox AmountRemaining = new FInputBox("Amount Remaining");
 
-        private HotkeyButton CARemaining = new HotkeyButton("F2", "Calculate Amount Remaining", Keys.F2);
+        private HotkeyButton CARemaining = new HotkeyButton("F2", "Insert Amount Remaining", Keys.F2);
         private Button CARemaining_button;
         private HotkeyButton CustomerInfo = new HotkeyButton("F3", "Customer Info", Keys.F3);
         private Button CustomerInfo_button;
@@ -50,9 +50,24 @@ namespace MJC.forms.order
             Cash.GetTextBox().TabIndex = 0;
             Cash.GetTextBox().Focus();
             Cash.GetTextBox().Select();
+
+            Cash.GetTextBox().KeyUp += PaymentProcessing_KeyUp;
+            FreightCollect.GetTextBox().KeyUp += PaymentProcessing_KeyUp;
+            OnAccount.GetTextBox().KeyUp += PaymentProcessing_KeyUp;
+            CargeCard.GetTextBox().KeyUp += PaymentProcessing_KeyUp;
+            Discount.GetTextBox().KeyUp += PaymentProcessing_KeyUp;
+            CreditsApplied.GetTextBox().KeyUp += PaymentProcessing_KeyUp;
+            
             this.customerId = cId;
             this.orderId = oId;
             this.orderTotal = decimal.Parse(oTotal.ToString());
+
+            calcPayment();
+        }
+
+        private void PaymentProcessing_KeyUp(object? sender, KeyEventArgs e)
+        {
+            calcPayment();
         }
 
         private void InitMBOKButton()
@@ -83,6 +98,31 @@ namespace MJC.forms.order
 
             CARemaining.GetButton().Click += (sender, e) =>
             {
+                if (Cash.GetTextBox().Focused && Cash.GetTextBox().Text == "0.00")
+                {
+                    Cash.GetTextBox().Text = AmountRemaining.GetTextBox().Text;
+                }
+                else if (OnAccount.GetTextBox().Focused && OnAccount.GetTextBox().Text == "0.00")
+                {
+                    OnAccount.GetTextBox().Text = AmountRemaining.GetTextBox().Text;
+                }
+                else if (FreightCollect.GetTextBox().Focused && FreightCollect.GetTextBox().Text == "0.00")
+                {
+                    FreightCollect.GetTextBox().Text = AmountRemaining.GetTextBox().Text;
+                }
+                else if (CargeCard.GetTextBox().Focused && CargeCard.GetTextBox().Text == "0.00")
+                {
+                    CargeCard.GetTextBox().Text = AmountRemaining.GetTextBox().Text;
+                }
+                else if (Discount.GetTextBox().Focused && Discount.GetTextBox().Text == "0.00")
+                {
+                    Discount.GetTextBox().Text = AmountRemaining.GetTextBox().Text;
+                }
+                else if (CreditsApplied.GetTextBox().Focused && CreditsApplied.GetTextBox().Text == "0.00")
+                {
+                    CreditsApplied.GetTextBox().Text = AmountRemaining.GetTextBox().Text;
+                }
+
                 calcPayment();
             };
 

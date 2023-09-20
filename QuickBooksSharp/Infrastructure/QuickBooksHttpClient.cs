@@ -18,6 +18,7 @@ namespace QuickBooksSharp
         private static HttpClient _httpClient = new HttpClient(new HttpClientHandler
         {
             AutomaticDecompression = DecompressionMethods.GZip
+            //, Proxy = new WebProxy("http://127.0.0.1:8888")
         });
 
 
