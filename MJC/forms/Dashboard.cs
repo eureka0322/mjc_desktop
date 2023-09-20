@@ -52,7 +52,7 @@ namespace MJC.forms
             if (!Program.permissionInventory) _disableNavButtons(new NavigationButton[1] { Inventory });
             if (!Program.permissionReceivables) _disableNavButtons(new NavigationButton[1] { Receivables });
             if (!Program.permissionSetting) _disableNavButtons(new NavigationButton[1] { SystemInformation });
-            MessageBox.Show(Program.permissionQuickBooks.ToString());
+            //MessageBox.Show(Program.permissionQuickBooks.ToString());
             if (!Program.permissionQuickBooks) { OpenQuickbooks.GetButton().Hide(); }
 
             SetImage();
