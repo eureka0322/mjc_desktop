@@ -52,14 +52,20 @@ namespace MJC.forms
             if (!Program.permissionInventory) _disableNavButtons(new NavigationButton[1] { Inventory });
             if (!Program.permissionReceivables) _disableNavButtons(new NavigationButton[1] { Receivables });
             if (!Program.permissionSetting) _disableNavButtons(new NavigationButton[1] { SystemInformation });
-            if (!Program.permissionQuickBooks) { OpenQuickbooks.GetButton().Enabled = false; }
+            MessageBox.Show(Program.permissionQuickBooks.ToString());
+            if (!Program.permissionQuickBooks) { OpenQuickbooks.GetButton().Hide(); }
 
             SetImage();
             SetLinkButtion();
 
             this.Activated += Dashboard_Activated;
-
+/*            
             RefreshQuickbooks(); 
+            
+            System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
+            timer.Interval = 5000;
+            timer.Tick += new System.EventHandler(RefreshQBOAccessTokens);
+            timer.Start();*/
         }
 
         private async void RefreshQBOAccessTokens(object? sender, EventArgs e)
@@ -75,26 +81,16 @@ namespace MJC.forms
             }
             if (DateTime.Now.Subtract(lastRefreshedQBO).TotalMinutes > 30)
             {
-                var token = !string.IsNullOrEmpty(Session.SettingsModelObj.Settings.refreshToken) ? Session.SettingsModelObj.Settings.refreshToken : QboLocal.Tokens.RefreshToken;
-
-                if (!string.IsNullOrEmpty(token))
+                if (!string.IsNullOrEmpty(Session.SettingsModelObj.Settings.refreshToken))
                 {
                     Console.WriteLine("Refreshing QuickBooks Online Access Token");
-                    if (await QboLib.QboLocal.Reauthenticate(token))
+                    if (await QboLib.QboLocal.Reauthenticate(Session.SettingsModelObj.Settings.refreshToken))
                     {
                         Session.SettingsModelObj.Settings.accessToken = QboLocal.Tokens.AccessToken;
                         Session.SettingsModelObj.Settings.refreshToken = QboLocal.Tokens.RefreshToken;
 
-                        // TODO: This is overwriting the settings of other sessions
-                        // Session.SettingsModelObj.SaveTokens(QboLocal.Tokens.AccessToken, QboLocal.Tokens.RefreshToken);
-
-                        // Session.SettingsModelObj.SaveSetting(Session.SettingsModelObj.Settings.taxCodeId, Session.SettingsModelObj.Settings.businessName, Session.SettingsModelObj.Settings.businessDescription, Session.SettingsModelObj.Settings.address1, Session.SettingsModelObj.Settings.address2, Session.SettingsModelObj.Settings.city, Session.SettingsModelObj.Settings.state, Session.SettingsModelObj.Settings.postalCode, Session.SettingsModelObj.Settings.phone, Session.SettingsModelObj.Settings.fax, Session.SettingsModelObj.Settings.ein, Session.SettingsModelObj.Settings.trainingEnabled, Session.SettingsModelObj.Settings.targetPrinter, Session.SettingsModelObj.Settings.accessToken, Session.SettingsModelObj.Settings.refreshToken, Session.SettingsModelObj.Settings.businessFooter, Session.SettingsModelObj.Settings.businessTermsOfService, Session.SettingsModelObj.Settings.invoicePrintQty.GetValueOrDefault(), Session.SettingsModelObj.Settings.holdOrderPrintQty.GetValueOrDefault(), Session.SettingsModelObj.Settings.quotePrintQty.GetValueOrDefault());
+                        Session.SettingsModelObj.SaveSetting(Session.SettingsModelObj.Settings.taxCodeId, Session.SettingsModelObj.Settings.businessName, Session.SettingsModelObj.Settings.businessDescription, Session.SettingsModelObj.Settings.address1, Session.SettingsModelObj.Settings.address2, Session.SettingsModelObj.Settings.city, Session.SettingsModelObj.Settings.state, Session.SettingsModelObj.Settings.postalCode, Session.SettingsModelObj.Settings.phone, Session.SettingsModelObj.Settings.fax, Session.SettingsModelObj.Settings.ein, Session.SettingsModelObj.Settings.trainingEnabled, Session.SettingsModelObj.Settings.targetPrinter, Session.SettingsModelObj.Settings.accessToken, Session.SettingsModelObj.Settings.refreshToken, Session.SettingsModelObj.Settings.businessFooter, Session.SettingsModelObj.Settings.businessTermsOfService, Session.SettingsModelObj.Settings.invoicePrintQty.GetValueOrDefault(), Session.SettingsModelObj.Settings.holdOrderPrintQty.GetValueOrDefault(), Session.SettingsModelObj.Settings.quotePrintQty.GetValueOrDefault());
                         lastRefreshedQBO = DateTime.Now;
-                    }
-                    else
-                    {
-                        lastRefreshedQBO = DateTime.Now;
-                        MessageBox.Show("We were unable to authenticate with Quickbooks. Please ask your accounting department to reauthenticate and try again.");
                     }
                 }
             }

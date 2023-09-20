@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
@@ -13,11 +13,7 @@ namespace MJC.config
 
         public DbConnection()
         {
-            // PRODUCTION DATABASE
-            //connectionString = @"Server=tcp:mndSQL10.everleap.com; Initial Catalog=DB_7153_mjcprod; User ID=DB_7153_mjcprod_user; Password = Drew-Cubicle5-Guru; Integrated Security = False";
-
-            // STAGING DATABASE
-            connectionString = @"Server=tcp:mndSQL10.everleap.com; Initial Catalog=DB_7153_mjcdev; User ID=DB_7153_mjcdev_user; Password = Drew-Cubicle5-Guru; Integrated Security = False";
+            connectionString = @"Server=DESKTOP-GI6T9UD;DataBase=DB_7153_mjcdev; integrated security= true";
         }
 
         protected SqlConnection GetConnection()

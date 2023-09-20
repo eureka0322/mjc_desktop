@@ -241,6 +241,7 @@ namespace MJC.forms.order
                 sInvoiceDesc = processingModal.sInvoiceDesc;
                 sDateShiped = processingModal.sDateShiped;
                 sInvoiceNumber = processingModal.sInvoiceNumber;
+                MessageBox.Show(sProcessedBy);
 
                 int proFlag = processingModal.GetFlag();
                 if (proFlag == 1)
@@ -249,6 +250,7 @@ namespace MJC.forms.order
                 }
                 if (proFlag == 2)
                 {
+                    MessageBox.Show(sProcessedBy, "1");
                     double orderTotal = getAmtTotal();
                     CloseOrderActions CloseOrderActionsModal = new CloseOrderActions(this.customerId, this.orderId, orderTotal);
                     CloseOrderActionsModal.ShowDialog();
@@ -917,6 +919,7 @@ namespace MJC.forms.order
                     orderItems = orderItems.Where(item => item.OrderId == 0).ToList();
                     try
                     {
+                        MessageBox.Show(sProcessedBy.ToString(), "2");
                         bool res = await qboApiService.CreateInvoice(customer, invoiceNumber, orderItems, sProcessedBy, sShipID);
 
                         if (res)
