@@ -26,7 +26,7 @@ namespace MJC.forms
         private NavigationButton Receive = new NavigationButton("Receive", new ReceiveInventory());
         private NavigationButton Deplete = new NavigationButton("Deplete", new DepleteInventory());
         //private NavigationButton PriceChange = new NavigationButton("Price Change", new PriceChange());
-        private NavigationButton CategoryMargins = new NavigationButton("Category Margins", new CategoryMargin());
+        private NavigationButton CategoryMargins = new NavigationButton("Category Margins", new CategoryMargin()); // TODO: This is slow to go!
         private NavigationButton Vendors = new NavigationButton("Vendors", new VendorList());
         private NavigationButton RecorderReport = new NavigationButton("Reorder Report", new Reorder());
         private NavigationButton ModuleInformation = new NavigationButton("Module Information", new ModuleInformation());

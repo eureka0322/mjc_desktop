@@ -433,20 +433,34 @@ namespace MJC.forms.customer
             DateTime last_date_purch = DateLastPurch.GetDateTimePicker().Value;
 
             if (!IsFieldsValidated()) return;
- 
-            QboApiService qboClient = new QboApiService();
 
             if (this.customerId == 0)
             {
-                var success = await qboClient.CreateCustomer(displayName, givenName, middleName, familyName, title, suffix, business_phone, homePhone, fax, address1, address2, city, state, zipcode, email, date_opened, salesman, resale, stmtCustomerNumber, stmtName, priceTierId, terms, limit, memo, taxable, send_stm, core_tracking, coreBalance, acct_type, print_core_tot, porequired, creditCodeId, interestRate, accountBalance, ytdPurchases, ytdInterest, last_date_purch, customerNumber);
-               
-                ShowInformation("The customers has been added successfully.");
+                try
+                {
+                    var success = await Session.qboApiService.CreateCustomer(displayName, givenName, middleName, familyName, title, suffix, business_phone, homePhone, fax, address1, address2, city, state, zipcode, email, date_opened, salesman, resale, stmtCustomerNumber, stmtName, priceTierId, terms, limit, memo, taxable, send_stm, core_tracking, coreBalance, acct_type, print_core_tot, porequired, creditCodeId, interestRate, accountBalance, ytdPurchases, ytdInterest, last_date_purch, customerNumber);
+
+                    ShowInformation("The customers has been added successfully.");
+                }
+                catch(Exception exception)
+                {
+                    Sentry.SentrySdk.CaptureException(exception);
+                    ShowError("There was an error while creating the customer.");
+                }
             }
             else
             {
-                qboClient.UpdateCustomer(displayName, givenName, middleName, familyName, title, suffix, business_phone, homePhone, fax, address1, address2, city, state, zipcode, email, date_opened, salesman, resale, stmtCustomerNumber, stmtName, priceTierId, terms, limit, memo, taxable, send_stm, core_tracking, coreBalance, acct_type, print_core_tot, porequired, creditCodeId, interestRate, accountBalance, ytdPurchases, ytdInterest, last_date_purch, this.qboId, this.syncToken, this.customerId, customerNumber);
+                try
+                {
+                    await Session.qboApiService.UpdateCustomer(displayName, givenName, middleName, familyName, title, suffix, business_phone, homePhone, fax, address1, address2, city, state, zipcode, email, date_opened, salesman, resale, stmtCustomerNumber, stmtName, priceTierId, terms, limit, memo, taxable, send_stm, core_tracking, coreBalance, acct_type, print_core_tot, porequired, creditCodeId, interestRate, accountBalance, ytdPurchases, ytdInterest, last_date_purch, this.qboId, this.syncToken, this.customerId, customerNumber);
 
-                ShowInformation("The customers information has been updated successfully.");
+                    ShowInformation("The customers information has been updated successfully.");
+                }
+                catch (Exception exception)
+                {
+                    Sentry.SentrySdk.CaptureException(exception); 
+                    ShowError("There was an error while updating the customer.");
+                }
             }
 
             _navigateToPrev(sender, e);
@@ -491,17 +505,17 @@ namespace MJC.forms.customer
                 return false;
             }
 
-            if (string.IsNullOrEmpty(givenName))
-            {
-                ShowError("Please provide the customers first name");
-                return false;
-            }
+            //if (string.IsNullOrEmpty(givenName))
+            //{
+            //    ShowError("Please provide the customers first name");
+            //    return false;
+            //}
 
-            if (string.IsNullOrEmpty(familyName))
-            {
-                ShowError("Please provide the customers lastname");
-                return false;
-            }
+            //if (string.IsNullOrEmpty(familyName))
+            //{
+            //    ShowError("Please provide the customers lastname");
+            //    return false;
+            //}
 
             if (string.IsNullOrEmpty(address1))
             {

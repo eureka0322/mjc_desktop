@@ -474,6 +474,11 @@ namespace MJC.common
 
         protected void GlobalLayout_KeyDown(object sender, KeyEventArgs e, HotkeyButton[] hkButtons, bool DefaultEscEvent)
         {
+            if (e.Handled || e.SuppressKeyPress)
+            {
+                return;
+            }
+
             if ((e.KeyCode == Keys.F4 && e.Alt))
             {
                 _closeProgram(sender, e);

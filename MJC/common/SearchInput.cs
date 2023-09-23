@@ -16,7 +16,7 @@ namespace MJC.common
         public FInputBox SearchKeyInput = new FInputBox("Search");
         private string initialSearchKey;
 
-        public SearchInput() : base("searchInput", false)
+        public SearchInput() : base("SKU Search", false)
         {
             InitializeComponent();
             _setModalStyle2();

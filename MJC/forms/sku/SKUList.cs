@@ -20,8 +20,10 @@ namespace MJC.forms.sku
         private HotkeyButton hkAdds = new HotkeyButton("Ins", "Adds", Keys.Insert);
         private HotkeyButton hkDeletes = new HotkeyButton("Del", "Deletes", Keys.Delete);
         private HotkeyButton hkSelects = new HotkeyButton("Enter", "Selects", Keys.Enter);
-        private HotkeyButton hkCrossRefLookup = new HotkeyButton("F1", "Cross Ref Lookup", Keys.F1);
-        private HotkeyButton hkViewAllocations = new HotkeyButton("F2", "View Allocations", Keys.F2);
+        private HotkeyButton hkSelectsForView = new HotkeyButton("Enter", "Selects", Keys.Enter);
+        private HotkeyButton hkCrossRefLookup = new HotkeyButton("F2", "Cross Ref Lookup", Keys.F2);
+        private HotkeyButton hkViewAllocations = new HotkeyButton("F3", "View Allocations", Keys.F3);
+        private HotkeyButton hkView = new HotkeyButton("F3", "View", Keys.F3);
         private HotkeyButton hkAdjustQty = new HotkeyButton("F4", "Adjust Qty", Keys.F4);
         private HotkeyButton hkSKUHistory = new HotkeyButton("F5", "SKU History", Keys.F5);
         private HotkeyButton hkProfileHistory = new HotkeyButton("F6", "Profile History", Keys.F6);
@@ -33,14 +35,21 @@ namespace MJC.forms.sku
 
         private string searchKey = "";
         private bool archievedView = false;
+        private bool ViewOnly = false;
 
+        public int selectedSKUId = 0;
 
-        public SKUList(bool ArchivedView = false) : base("SKU List", "List of SKUs")
+        public SKUList(bool ArchivedView = false, bool ViewOnly = false) : base("SKU List", "List of SKUs")
         {
+            this.ViewOnly = ViewOnly;
+
             InitializeComponent();
             _initBasicSize();
 
-            HotkeyButton[] hkButtons = new HotkeyButton[9] { hkAdds, hkDeletes, hkSelects, hkCrossRefLookup, hkViewAllocations, hkAdjustQty, hkSKUHistory, hkProfileHistory, hkArchivedSKUs };
+            HotkeyButton[] hkButtons;
+            if (ViewOnly)
+                hkButtons = new HotkeyButton[3] { hkSelectsForView, hkCrossRefLookup, hkView };
+            else hkButtons = new HotkeyButton[9] { hkAdds, hkDeletes, hkSelects, hkCrossRefLookup, hkViewAllocations, hkAdjustQty, hkSKUHistory, hkProfileHistory, hkArchivedSKUs };
             _initializeHKButtons(hkButtons);
             AddHotKeyEvents();
 
@@ -132,6 +141,17 @@ namespace MJC.forms.sku
                     }
                 }
             };
+            hkSelectsForView.GetButton().Click += (sender, e) => {
+
+                int rowIndex = SKUGridRefer.SelectedRows[0].Index;
+
+                this.SKUGridSelectedIndex = rowIndex;
+
+                DataGridViewRow row = SKUGridRefer.Rows[rowIndex];
+                selectedSKUId = (int)row.Cells[0].Value;
+
+                _navigateToPrev(sender, e);
+            };
             hkCrossRefLookup.GetButton().Click += (sender, e) =>
             {
 
@@ -139,10 +159,10 @@ namespace MJC.forms.sku
                 this.SKUGridSelectedIndex = SKUGridRefer.SelectedRows[0].Index;
 
                 DataGridViewRow row = SKUGridRefer.Rows[rowIndex];
-                int skuId = (int)row.Cells[0].Value;
+                selectedSKUId = (int)row.Cells[0].Value;
                 string skuName = row.Cells[1].Value.ToString();
 
-                CrossReference CrossRefModal = new CrossReference(skuId);
+                CrossReference CrossRefModal = new CrossReference(selectedSKUId);
                 _navigateToForm(sender, e, CrossRefModal);
                 this.Hide();
             };
@@ -248,6 +268,14 @@ namespace MJC.forms.sku
             SKUGridRefer.Width = this.Width - 20;
             SKUGridRefer.Height = this.Height - 330;
             SKUGridRefer.VirtualMode = true;
+            SKUGridRefer.KeyDown += (s, e) =>
+            {
+                if (e.KeyCode == Keys.F3)
+                {
+                    e.Handled = true;  // Cancels the F3 key press
+                }
+            };
+
             this.Controls.Add(SKUGridRefer);
             this.SKUGridRefer.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.SKUGridView_CellDoubleClick);
             this.SKUGridRefer.SelectionChanged += (s, e) => SKUGridRefer_SelectionChanged(s, e);

@@ -10,6 +10,7 @@ using System.Reflection;
 using Microsoft.CodeAnalysis;
 using System.Security.Cryptography.Xml;
 using System.Linq;
+using MJC.config;
 
 namespace MJC.forms.order
 {
@@ -31,7 +32,7 @@ namespace MJC.forms.order
         private FlabelConstant CustomerName = new FlabelConstant("Name:", 150);
         private FlabelConstant Terms = new FlabelConstant("Terms:", 150);
         //private FlabelConstant Zone = new FlabelConstant("Zone", 150);
-        private FlabelConstant Position = new FlabelConstant("PO#:", 150);
+        private FInputBox PoNumber = new FInputBox("PO#:", 100);
 
         private FlabelConstant Requested = new FlabelConstant("Requested:");
         private FlabelConstant Filled = new FlabelConstant("Filled:");
@@ -101,7 +102,7 @@ namespace MJC.forms.order
 
             dynamic customer = Session.CustomersModelObj.GetCustomerDataById(customerId);
             // this.TotalSkuList = Session.SKUModelObj.SkuOrderItems;
-            
+
             // Default customer to the first priceTierId
             if (customer?.priceTierId == null)
             {
@@ -129,8 +130,6 @@ namespace MJC.forms.order
             InitOrderItemsList();
 
             InitGridFooter();
-
-
         }
 
         private void printInvoice(int orderId, int orderStatus)
@@ -147,6 +146,7 @@ namespace MJC.forms.order
             string subtotal = Subtotal.GetConstant().Text;
             string coretotal = "0.00";
             string labortotal = this.billAsLabor.ToString("0.00");
+            string procesedBy = sProcessedBy;
 
             /// Pull from populateinformationfield subroutine in best manner.  Helper integration imo.
             /// [] To Couple
@@ -155,18 +155,19 @@ namespace MJC.forms.order
             Stream reportDefinition; // your RDLC from file or resource
             System.Data.DataTable dataSource; // your datasource for the report
             System.Data.DataTable dataSource2; // datasource for order totals
-            
+
             dataSource = query("Select * from vwrptOrder Where MasterOrderID=" + masterOrderID.ToString());
-            if (dataSource.Rows.Count == 0) { 
-                return; 
+            if (dataSource.Rows.Count == 0)
+            {
+                return;
             }
             if (dataSource.Rows[0]["statusID"].ToString() == "1") { status = "PICKING SLIP"; }
             if (dataSource.Rows[0]["statusID"].ToString() == "2") { status = "QUOTE"; }
             if (dataSource.Rows[0]["statusID"].ToString() == "3") { status = "INVOICE"; }
             if (dataSource.Rows[0]["statusID"].ToString() == "4") { status = "HISTORICAL INVOICE"; }
 
-            dataSource2 = query("SELECT        id, '" + subtotal.ToString() + "' AS subtotal, '" + taxtotal.ToString() + "' AS taxtotal, '" + coretotal.ToString() + "' AS coretotal, '" + labortotal.ToString() + "' AS labortotal, '" + totaltotal.ToString() + "' AS totaltotal, '" + status + "' AS Expr1 FROM Orders");
-            
+            dataSource2 = query("SELECT        id, '" + subtotal.ToString() + "' AS subtotal, '" + taxtotal.ToString() + "' AS taxtotal, '" + coretotal.ToString() + "' AS coretotal, '" + labortotal.ToString() + "' AS labortotal, '" + totaltotal.ToString() + "' AS totaltotal, '" + sProcessedBy.ToString() + "' AS processedBy, '" + status + "' AS Expr1 FROM Orders");
+
             reportDefinition = System.IO.File.Open(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\reports\\rptInvoice.rdl", FileMode.Open);
             Microsoft.Reporting.NETCore.LocalReport report = new Microsoft.Reporting.NETCore.LocalReport();
             report.LoadReportDefinition(reportDefinition);
@@ -179,20 +180,22 @@ namespace MJC.forms.order
             var temporaryFile = Path.GetTempFileName();
 
             var path = Path.Combine(temporaryPath, @"\MJC");
-            if (!Directory.Exists(path)) { 
-                Directory.CreateDirectory(path); 
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
             }
 
             var tempFile = Path.Combine(temporaryPath, @"\MJC", temporaryFile);
             File.WriteAllBytes(tempFile, pdf);
-            // File.Copy(tempFile, "C:\\MJCtemp\\Report.pdf",true);
+
+            File.Copy(tempFile, $"C:\\MJCtemp\\{sInvoiceNumber}.pdf", true);
 
             SendToPrinter(tempFile);
         }
 
         public DataTable query(string sqlString)
         {
-            string connectionString = @"Server=tcp:mndSQL10.everleap.com; Initial Catalog=DB_7153_mjcdev; User ID=DB_7153_mjcdev_user; Password = Drew-Cubicle5-Guru; Integrated Security = False";
+            string connectionString = @"Server=tcp:mndSQL10.everleap.com; Initial Catalog=DB_7153_mjcdev; User ID=DB_7153_mjcdev_user; Password = Title-Actor-Fin-13; Integrated Security = False";
             try
             {
                 var da = new System.Data.SqlClient.SqlDataAdapter(sqlString, connectionString);
@@ -212,8 +215,12 @@ namespace MJC.forms.order
         private void SendToPrinter(string Filepath)
         {
             var document = PdfiumViewer.PdfDocument.Load(Filepath);
-            // TODO: Not working
-            // document.CreatePrintDocument().PrinterSettings.PrinterName = "Microsoft Print to PDF";
+#if RELEASE
+    var printer = string.IsNullOrEmpty(Session.SettingsModelObj.Settings.targetPrinter);
+    if(!string.isNullOrEmpty(printer)) {
+        document.CreatePrintDocument().PrinterSettings.PrinterName = printer;
+    }
+#endif
             document.CreatePrintDocument().Print();
         }
 
@@ -230,7 +237,7 @@ namespace MJC.forms.order
             //{
             //    EditItem(s, e);
             //};
-            
+
             hkCloseOrder.GetButton().Click += async (sender, e) =>
             {
                 Processing processingModal = new Processing();
@@ -254,7 +261,7 @@ namespace MJC.forms.order
                     double orderTotal = getAmtTotal();
                     CloseOrderActions CloseOrderActionsModal = new CloseOrderActions(this.customerId, this.orderId, orderTotal);
                     CloseOrderActionsModal.ShowDialog();
-                    
+
                     int saveFlag = CloseOrderActionsModal.GetSaveFlage();
                     if (saveFlag == 7)
                     {
@@ -364,15 +371,17 @@ namespace MJC.forms.order
                             }
                         }
                     }
-                    
+
                 }
-                
+
             };
             hkDeletes.GetButton().Click += (sender, e) =>
             {
-                DialogResult result = MessageBox.Show("Are you sure you want to delete this row?", "Confirm Delete", MessageBoxButtons.YesNo);
+                DialogResult result = MessageBox.Show("Are you sure you want to delete this row?", "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                 if (result == DialogResult.Yes)
                 {
+                    var selectedIndex = POGridRefer.SelectedRows[0].Index;
+
                     int selectedOrderId = 0;
                     if (POGridRefer.SelectedRows.Count > 0)
                     {
@@ -380,6 +389,19 @@ namespace MJC.forms.order
                         {
                             selectedOrderId = (int)row.Cells[0].Value;
                         }
+
+                        // Remove the item from the OrderData
+                        this.OrderItemData.RemoveAt(POGridRefer.SelectedRows[0].Index);
+
+                        BindingList<OrderItem> dataList = new BindingList<OrderItem>(this.OrderItemData);
+                        POGridRefer.DataSource = dataList.ToList();
+
+                        //                        LoadOrderItemList();
+
+                        selectedIndex--;
+                        if (selectedIndex < 0) selectedIndex = 0;
+
+                        // POGridRefer.Rows[selectedIndex].Selected = true;
                     }
                 }
             };
@@ -457,13 +479,14 @@ namespace MJC.forms.order
             FormComponents.Add(Terms);
             FormComponents.Add(ShipOrder);
             //FormComponents.Add(Zone);
-            FormComponents.Add(Position);
+            FormComponents.Add(PoNumber);
 
             _addFormInputs(FormComponents, 30, 110, 650, 42, 180);
 
             var refreshData = Session.CustomersModelObj.LoadCustomerData("", false);
 
             Customer_ComBo.GetComboBox().DataSource = Session.CustomersModelObj.CustomerDataList;
+            Customer_ComBo.GetComboBox().MaxDropDownItems = 10;
             Customer_ComBo.GetComboBox().DisplayMember = "Num";
             Customer_ComBo.GetComboBox().ValueMember = "Id";
             Customer_ComBo.GetComboBox().SelectedValueChanged += new EventHandler(ProcessOrder_SelectedValueChanged);
@@ -479,7 +502,7 @@ namespace MJC.forms.order
 
             oldCustomerIndex = customerId;
 
-            // Position.GetLabel().Focus();
+            // PoNumber.GetLabel().Focus();
             // POGridRefer.Select();
         }
 
@@ -506,8 +529,16 @@ namespace MJC.forms.order
                     if (customerData.terms != "") Terms.SetContext(customerData.terms);
                     else Terms.SetContext("N/A");
 
-                    if (customerData.poRequired != "") Position.SetContext(customerData.poRequired);
-                    else Position.SetContext("N/A");
+                    if (customerData.poRequired)
+                    {
+                        PoNumber.GetLabel().Show();
+                        PoNumber.GetTextBox().Show();
+                    }
+                    else
+                    {
+                        PoNumber.GetLabel().Hide();
+                        PoNumber.GetTextBox().Hide();
+                    }
                 }
             }
             LoadOrderItemList();
@@ -557,30 +588,8 @@ namespace MJC.forms.order
             POGridRefer.EditingControlShowing += POGridRefer_EditingControlShowing;
             POGridRefer.DataError += POGridRefer_DataError;
             this.Controls.Add(POGridRefer);
-         
-            //foreach (DataGridViewRow row in POGridRefer.Rows)
-            //{
-            //    row.ReadOnly = false;
-            //    foreach (DataGridViewCell cell in row.Cells)
-            //    {
-            //        cell.ReadOnly = false;
-            //    }
-            //}
-            
+
             LoadOrderItemList();
-
-            //if (this.isAddNewOrderItem)
-            //{
-            //    this.OrderItemData.Add(new OrderItem());
-            //    BindingList<OrderItem> dataList = new BindingList<OrderItem>(this.OrderItemData);
-
-            //    POGridRefer.DataSource = dataList;
-
-            //    int rowIndex = POGridRefer.Rows.Count - 1;
-
-            //    POGridRefer.CurrentCell = POGridRefer.Rows[rowIndex].Cells[3];
-            //    POGridRefer.BeginEdit(true);
-            //}
         }
 
         private void POGridRefer_DataError(object? sender, DataGridViewDataErrorEventArgs e)
@@ -620,41 +629,46 @@ namespace MJC.forms.order
 
         private void PopulateInformationField()
         {
-            if (this.skuId == 0) return;
             if (POGridRefer.SelectedRows.Count == 0) return;
 
-            int skuId = this.skuId;
-            var qtyInfo = Session.SKUModelObj.LoadSkuQty(skuId);
-
-            SKUOrderItem sku = this.SubSkuList.FirstOrDefault(x => x.Id == skuId);
-
+            // Make sure we have the default SKU #2 for tax code
             SalesTaxCodeModel salesTaxCodeModel = new SalesTaxCodeModel();
             salesTaxCodeModel.LoadSalesTaxCodeData("");
-
-            var items = Session.PriceTiersModelObj.GetPriceTierItems();
-            var priceTierItem = items[sku.PriceTierId];
-
-            // Make sure we have the default SKU #2 for tax code
             var taxCodeId = Session.SettingsModelObj.Settings.taxCodeId.GetValueOrDefault(2);
             var salesTaxCode = salesTaxCodeModel.GetSalesTaxCodeData(taxCodeId);
             var taxRate = salesTaxCode.rate;
 
-            QtyOnHold.SetContext(qtyInfo.qty.ToString());
-            QtyAllocated.SetContext(qtyInfo.qtyAllocated.ToString());
-            QtyAvailable.SetContext(qtyInfo.qtyAvailable.ToString());
-
             DataGridViewRow selectedRow = POGridRefer.SelectedRows[0];
+            var unitPrice = selectedRow.Cells["UnitPrice"].Value as double?;
+            var quantity = selectedRow.Cells["Quantity"].Value as int?;
+            var requested = quantity;
+            var filled = requested;
 
-            var unitPrice = sku.Price;
-            var quantity = selectedRow.Cells["quantity"].Value as int?;
+            if (this.skuId != 0)
+            {
+                int skuId = this.skuId;
+                var qtyInfo = Session.SKUModelObj.LoadSkuQty(skuId);
 
-            selectedRow.Cells["lineTotal"].Value = unitPrice * quantity;
+                SKUOrderItem sku = this.SubSkuList.FirstOrDefault(x => x.Id == skuId);
+
+                var items = Session.PriceTiersModelObj.GetPriceTierItems();
+                var priceTierItem = items[sku.PriceTierId];
+
+                QtyOnHold.SetContext(qtyInfo.qty.ToString());
+                QtyAllocated.SetContext(qtyInfo.qtyAllocated.ToString());
+                QtyAvailable.SetContext(qtyInfo.qtyAvailable.ToString());
+
+                if (requested > qtyInfo.qtyAvailable)
+                {
+                    filled = qtyInfo.qtyAvailable;
+                }
+            }
 
             var total = 0.00;
             var tax = 0.00;
 
             double _billAsLabor = 0.0;
-            
+
             foreach (var item in OrderItemData)
             {
                 var _lineTotal = (item?.UnitPrice * item?.Quantity) ?? 0.00;
@@ -680,18 +694,13 @@ namespace MJC.forms.order
             //var taxAmount = lineTotal * (taxRate / 100);
             var totalAmount = tax + total;
 
+            selectedRow.Cells["lineTotal"].Value = unitPrice * quantity;
+
             TaxPercent.GetLabel().Text = $"{taxRate}% Tax:";
 
             Subtotal.SetContext(total.ToString("#,##0.00"));
             TaxPercent.SetContext(tax.ToString("0.00"));
             TotalSale.SetContext(totalAmount.ToString("$#,##0.00"));
-
-            var requested = quantity;
-            var filled = requested;
-            if (requested > qtyInfo.qtyAvailable)
-            {
-                filled = qtyInfo.qtyAvailable;
-            }
 
             Filled.SetContext(filled.ToString());
             Requested.SetContext(requested.ToString());
@@ -701,15 +710,19 @@ namespace MJC.forms.order
         {
             if (POGridRefer == null) return;
 
-            this.OrderItemData = new List<OrderItem>(); // this.selectedOrderId
+            if (this.OrderItemData == null)
+            {
+                this.OrderItemData = new List<OrderItem>(); // this.selectedOrderId
+            }
 
             if (!isAddNewOrderItem)
             {
                 OrderItemData = Session.OrderItemModelObj.GetOrderItemsListByCustomerId(this.customerId, 0, sort);
             }
 
-            POGridRefer.VirtualMode = true;
 
+            POGridRefer.SuspendLayout();
+            POGridRefer.VirtualMode = true;
             POGridRefer.Columns.Clear();
             POGridRefer.DataSource = this.OrderItemData;
             POGridRefer.ScrollBars = ScrollBars.Vertical;
@@ -764,7 +777,7 @@ namespace MJC.forms.order
             POGridRefer.Columns[12].Name = "salesCode";
             POGridRefer.Columns[12].DataPropertyName = "sc";
             POGridRefer.Columns[12].Width = 200;
-           
+
             POGridRefer.Columns[13].HeaderText = "Price Tier";
             POGridRefer.Columns[13].Name = "PriceTier";
             POGridRefer.Columns[13].DataPropertyName = "priceTier";
@@ -774,21 +787,26 @@ namespace MJC.forms.order
             POGridRefer.Columns[14].Visible = false;
 
             // TODO: SKUDataList is causing the form to load very slowly. Need to find a way to load this data faster.
-            DataGridViewComboBoxColumn comboBoxColumn = new DataGridViewComboBoxColumn();
-            comboBoxColumn.DataSource = Session.SKUModelObj.SKUDataList.ToList();
-            comboBoxColumn.HeaderText = "SKU#";
-            comboBoxColumn.Width = 300;
-            comboBoxColumn.Name = "skuNumber";
-            comboBoxColumn.MaxDropDownItems = 1;
-            comboBoxColumn.DataPropertyName = "skuId";
-            comboBoxColumn.ValueMember = "Id";
-            comboBoxColumn.DisplayMember = "Name";
-            comboBoxColumn.AutoComplete = true;
-            comboBoxColumn.DisplayIndex = 6;
-            comboBoxColumn.DisplayStyle = DataGridViewComboBoxDisplayStyle.Nothing;
+            //DataGridViewComboBoxColumn comboBoxColumn = new DataGridViewComboBoxColumn();
+            //comboBoxColumn.DataSource = Session.SKUModelObj.SKUDataList.ToList().Take(10).ToList();
+            //comboBoxColumn.HeaderText = "SKU#";
+            //comboBoxColumn.Width = 300;
+            //comboBoxColumn.Name = "skuNumber";
+            //comboBoxColumn.MaxDropDownItems = 10;
+            //comboBoxColumn.DataPropertyName = "skuId";
+            //comboBoxColumn.ValueMember = "Id";
+            //comboBoxColumn.DisplayMember = "Name";
+            //// comboBoxColumn.AutoComplete = true;
+            //comboBoxColumn.DisplayIndex = 6;
+            //comboBoxColumn.DisplayStyle = DataGridViewComboBoxDisplayStyle.Nothing;
+            //// POGridRefer.Columns.Add(comboBoxColumn)
 
-            POGridRefer.Columns.Add(comboBoxColumn);
-            int columnIndex = POGridRefer.Columns.IndexOf(comboBoxColumn);
+            DataGridViewTextBoxColumn skuColumn = new DataGridViewTextBoxColumn();
+            skuColumn.HeaderText = "SKU#";
+            skuColumn.DisplayIndex = 6;
+            skuColumn.Width = 300;
+            skuColumn.DataPropertyName = "Sku";
+            POGridRefer.Columns.Add(skuColumn);
 
             // Tax ComboBox Column
             DataGridViewComboBoxColumn taxComboBoxColumn = new DataGridViewComboBoxColumn();
@@ -811,8 +829,12 @@ namespace MJC.forms.order
             POGridRefer.CellEndEdit += POGridRefer_CellEndEdit;
             POGridRefer.SelectionChanged += POGridRefer_SelectionChanged;
 
-            InsertItem(null, null);
+            if (this.OrderItemData.Count == 0)
+            {
+                InsertItem(null, null);
+            }
         }
+
 
         private double getAmtTotal()
         {
@@ -827,7 +849,7 @@ namespace MJC.forms.order
             var tax = 0.00;
 
             double _billAsLabor = 0.0;
-            
+
             foreach (var item in OrderItemData)
             {
                 var _lineTotal = (item?.UnitPrice * item?.Quantity) ?? 0.00;
@@ -868,33 +890,83 @@ namespace MJC.forms.order
         private void POGridRefer_CellEndEdit(object? sender, DataGridViewCellEventArgs e)
         {
             System.Diagnostics.Debug.WriteLine("POGridRefer_CellEndEdit");
+            //if (e.ColumnIndex == 15)
+            //{
+            //DataGridViewComboBoxCell comboBoxCell = (DataGridViewComboBoxCell)POGridRefer.Rows[e.RowIndex].Cells[e.ColumnIndex];
+            //    var x = comboBoxCell.Value;
+            //    Console.WriteLine(x);
+            //}
+            var x = POGridRefer.Rows[e.RowIndex].Cells[e.ColumnIndex];
+
         }
 
         private void PoGridRefer_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
             System.Diagnostics.Debug.WriteLine("PoGridRefer_CellValueChanged");
             if (POGridRefer.SelectedRows.Count == 0) return;
-
-            if (e.ColumnIndex == 8)
+            if (e.RowIndex == -1) return;
+            if (e.ColumnIndex == 15)
             {
-                DataGridViewRow selectedRow = POGridRefer.SelectedRows[0];
-                DataGridViewComboBoxCell comboBoxCell = (DataGridViewComboBoxCell)POGridRefer.Rows[e.RowIndex].Cells[e.ColumnIndex];
-                var selectedValue = comboBoxCell.Value?.ToString();
+                var sku = (string)POGridRefer.Rows[e.RowIndex].Cells[e.ColumnIndex].Value;
+                if (string.IsNullOrEmpty(sku)) return;
 
-                if (selectedValue == "True")
+                var skus = Session.SKUModelObj.SKUDataList.Where(item => item.Name == sku.ToLower());
+                if (skus.Count() == 0)
                 {
-                    this.OrderItemData[e.RowIndex].Tax = true;
+                    // Special Order
+                    // Non Inventory Item
+                    // Message
+                }
+                else if (skus.Count() > 1)
+                {
+                    var skuInfo = skus.FirstOrDefault();
+                    SKUOrderItem skuData = this.SubSkuList.Where(item => item.Id == skuInfo.Id).ToList()[0];
+                    var salesCostCodeData = Session.SalesCostCodesModelObj.SalesCostCodeDataList.FirstOrDefault(x => x.id == skuData.CostCode.Value);
+
+                    DataGridViewRow selectedRow = POGridRefer.SelectedRows[0];
+                    selectedRow.Cells["sku"].Value = skuData.Name;
+                    selectedRow.Cells["qboSkuId"].Value = skuData.QboSkuId;
+                    selectedRow.Cells["description"].Value = skuData.Description;
+                    //selectedRow.Cells["priceTier"].Value = sku.PriceTierId;
+                    selectedRow.Cells["unitPrice"].Value = skuData.Price;
+                    selectedRow.Cells["lineTotal"].Value = skuData.Price * skuData.Qty;
+                    selectedRow.Cells["salesCode"].Value = salesCostCodeData.scCode;
+                    selectedRow.Cells["quantity"].Value = 1;
+
+                    this.OrderItemData[e.RowIndex].SkuId = skuInfo.Id;
+                    this.skuId = skuInfo.Id;
+
+                    PopulateInformationField();
                 }
                 else
                 {
-                    this.OrderItemData[e.RowIndex].Tax = false;
-                }
+                    var skuInfo = skus.FirstOrDefault();
+                    SKUOrderItem skuData = this.SubSkuList.Where(item => item.Id == skuInfo.Id).ToList()[0];
+                    var salesCostCodeData = Session.SalesCostCodesModelObj.SalesCostCodeDataList.FirstOrDefault(x => x.id == skuData.CostCode.Value);
 
-                PopulateInformationField();
+                    DataGridViewRow selectedRow = POGridRefer.SelectedRows[0];
+                    selectedRow.Cells["sku"].Value = skuData.Name;
+                    selectedRow.Cells["qboSkuId"].Value = skuData.QboSkuId;
+                    selectedRow.Cells["description"].Value = skuData.Description;
+                    //selectedRow.Cells["priceTier"].Value = sku.PriceTierId;
+                    selectedRow.Cells["unitPrice"].Value = skuData.Price;
+                    selectedRow.Cells["lineTotal"].Value = skuData.Price * skuData.Qty;
+                    selectedRow.Cells["salesCode"].Value = salesCostCodeData.scCode;
+                    selectedRow.Cells["quantity"].Value = 1;
+
+                    this.OrderItemData[e.RowIndex].SkuId = skuInfo.Id;
+                    this.skuId = skuInfo.Id;
+
+                    PopulateInformationField();
+                }
             }
             else
             // Quantity changed
             if (e.ColumnIndex == 6)
+            {
+                PopulateInformationField();
+            }
+            else if (e.ColumnIndex == 10)
             {
                 PopulateInformationField();
             }
@@ -941,15 +1013,32 @@ namespace MJC.forms.order
                 this.selectedOrderId = orderItems[orderItems.Count - 1].OrderId;
                 foreach (var order in orderItems)
                 {
+                    // For all special order items and non inventory items, let's use the NVI SKU
+                    if (order.SkuId == null || order.SkuId == 0)
+                    {
+                        var sku = Session.SKUModelObj.SKUDataList.FirstOrDefault(x => x.Name == "NVI");
+
+                        var skuName = order.Sku;
+                        order.SkuId = sku.Id;
+                    }
+
+                    // This is a message line, we don't want a visible SKU
+                    if (string.IsNullOrEmpty(order.Sku) && !string.IsNullOrEmpty(order.Description))
+                    {
+                        order.Sku = "";
+                    }
+
+                    // Add Memo
                     order.message = Message;
                 }
+
 
                 if (this.selectedOrderId == 0)
                 {
                     orderItems = orderItems.Where(item => item.OrderId == 0).ToList();
                     try
                     {
-                        bool res = await Session.qboApiService.CreateInvoice(customer, invoiceNumber, orderItems, sProcessedBy, sShipID, sInvoiceDesc);
+                        bool res = await Session.qboApiService.CreateInvoice(customer, invoiceNumber, orderItems, sProcessedBy, sShipID, sInvoiceDesc, PoNumber.GetTextBox().Text, sVia, Terms.GetConstant().Text);
 
                         if (res)
                         {
@@ -981,7 +1070,7 @@ namespace MJC.forms.order
                         {
                             ShowError("The invoice could not be created: There was an invalid item on the invoice.");
                         }
-                        else if (e.Message.Contains("Invoice ID"))
+                        else if (e.Message.Contains("Duplicate Document Number"))
                         {
                             ShowError("The invoice could not be created: The invoice number has already been used. Please change your invoice number and try again.");
                         }
@@ -1052,44 +1141,37 @@ namespace MJC.forms.order
 
             this.OrderItemData.Add(new OrderItem
             {
-                SkuId = sku.Id,
-                Sku = sku.Name,
-                QboSkuId = sku.QboSkuId,
-                Description = sku.Description,
-                PriceTier = sku.PriceTierId,
-                PriceTierCode = sku.PriceTier,
-                UnitPrice = sku.Price,
-                LineTotal = sku.Price * sku.Qty,
-                SC = salesCostCodeData.scCode,
-                Quantity = sku.Qty > 0 ? sku.Qty : 1,
-                Tax = taxable,
-                BillAsLabor = true
+                //SkuId = sku.Id,
+                //Sku = sku.Name,
+                //QboSkuId = sku.QboSkuId,
+                //Description = sku.Description,
+                //PriceTier = sku.PriceTierId,
+                //PriceTierCode = sku.PriceTier,
+                //UnitPrice = sku.Price,
+                //LineTotal = sku.Price * sku.Qty,
+                //SC = salesCostCodeData.scCode,
+                //Quantity = sku.Qty > 0 ? sku.Qty : 1,
+                //Tax = taxable,
+                //BillAsLabor = true
             });
 
-
-            // TODO, Why do we need to reload this list?
             BindingList<OrderItem> dataList = new BindingList<OrderItem>(this.OrderItemData);
             POGridRefer.DataSource = dataList.ToList();
 
-            int index = 0;
-            foreach (DataGridViewRow row in POGridRefer.Rows)
-            {
-                DataGridViewCell cell = row.Cells["SkuNumber"];
-
-                if (this.OrderItemData[index].SkuId != 0)
-                {
-                    cell.Value = this.OrderItemData[index].SkuId;
-                }
-
-                index++;
-            }
-
             if (POGridRefer.Rows.Count > 0)
             {
-//               POGridRefer.CurrentCell = POGridRefer.Rows[POGridRefer.Rows.Count - 1].Cells[15];
+                POGridRefer.CurrentCell = POGridRefer.Rows[POGridRefer.Rows.Count - 1].Cells[15];
                 POGridRefer.Select();
-//               POGridRefer.BeginEdit(true);
+                // POGridRefer.BeginEdit(true); // This is not needed because we are using EditOnKeyDown
             }
+        }
+
+        private void AddItem(int skuId = 0)
+        {
+            if (skuId == 0) return;
+
+            var skuData = Session.SKUModelObj.GetSKUData(skuId);
+            POGridRefer.SelectedRows[0].Cells[15].Value = skuData[0].sku;
         }
 
         private void EditItem(object sender, EventArgs e)
@@ -1107,50 +1189,53 @@ namespace MJC.forms.order
 
         private void DataGridView_KeyDown(object sender, KeyEventArgs e)
         {
-            return;
             DataGridView dataGridView = (DataGridView)sender;
             if (e.KeyCode == Keys.Enter)
             {
                 int rowIndex = POGridRefer.SelectedRows[0].Index;
                 int columnIndex = POGridRefer.CurrentCell.ColumnIndex;
 
-                if (dataGridView.CurrentCell != null && dataGridView.CurrentCell.IsInEditMode)
-                {
-                    //if (dataGridView.CurrentRow.Cells[dataGridView.CurrentCell.ColumnIndex + 1].Visible)
-                    //{
-                    e.Handled = true;
-                    int nextColumnIndex = dataGridView.CurrentCell.ColumnIndex + 1;
-                    dataGridView.CurrentCell = dataGridView.CurrentRow.Cells[nextColumnIndex];
-                    dataGridView.BeginEdit(true);
-                    //}
-                    //else if (dataGridView.CurrentRow.Index < dataGridView.Rows.Count - 1)
-                    //{
-                    //    e.Handled = true;
-                    //    dataGridView.CurrentCell = dataGridView.Rows[dataGridView.CurrentRow.Index + 1].Cells[0];
-                    //    dataGridView.BeginEdit(true);
-                    //}
+                if (dataGridView.CurrentCell != null && dataGridView.CurrentCell.IsInEditMode)  
+                { 
                 }
                 else if (dataGridView.CurrentCell != null && dataGridView.CurrentCell.IsInEditMode == false)
                 {
-
-                    //if (columnIndex == 13)
-                    //{
-                    //    DataGridViewComboBoxCell dataGridViewComboBoxCell = (DataGridViewComboBoxCell)dataGridView.CurrentCell;
-                    //    if (dataGridViewComboBoxCell.DisplayStyle == DataGridViewComboBoxDisplayStyle.ComboBox)
-                    //    {
-                    //        dataGridViewComboBoxCell.DisplayStyle = DataGridViewComboBoxDisplayStyle.Nothing;
-                    //    } else
-                    //    {
-                    //        dataGridViewComboBoxCell.ReadOnly = false;
-                    //        //dataGridViewComboBoxCell.IsInEditMode = true;
-                    //        dataGridViewComboBoxCell.DisplayStyle = DataGridViewComboBoxDisplayStyle.ComboBox;
-                    //    }
-                    //} else
-                    //{
-                    e.Handled = true;
-                    dataGridView.BeginEdit(true);
-                    //}
+                    if (columnIndex == 15)
+                    {
+                        var lookupOptionsForm = new LookupOptions();
+                        this.Enabled = false;
+                        lookupOptionsForm.FormClosed += (s, e) =>
+                        {
+                            this.Enabled = true;
+                            LookUpAction(lookupOptionsForm.lookupOptions);
+                        };
+                        lookupOptionsForm.Show();
+                        e.Handled = true;
+                    }
                 }
+            }
+        }
+
+
+        private void LookUpAction(int actionID)
+        {
+            switch (actionID)
+            {
+                case 0:
+                    break;
+                case 1:
+                    SKUList SKUListForm = new SKUList(false, true);
+                    SKUListForm._prevForm = this;
+                    SKUListForm.VisibleChanged += (s, e) => {
+                        if (!SKUListForm.Visible)
+                        {
+                            int selectedSKUId = SKUListForm.selectedSKUId;
+                            AddItem(selectedSKUId);
+                        }
+                    };
+                    SKUListForm.Show();
+                    this.Hide();
+                    break;
             }
         }
 
@@ -1160,8 +1245,11 @@ namespace MJC.forms.order
             if (comboBox != null)
             {
                 comboBox.DropDownStyle = ComboBoxStyle.DropDown;
-                comboBox.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+                comboBox.AutoCompleteMode = AutoCompleteMode.Append;
+                comboBox.IntegralHeight = false;
+                comboBox.MaxDropDownItems = 10;
             }
+
         }
     }
 }

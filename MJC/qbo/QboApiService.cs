@@ -183,7 +183,7 @@ namespace MJC.qbo
             {
                 var result = await dataService.PostAsync(new Item
                 {
-
+                    Sku = "test",
                 });
             }
             catch (Exception exc)
@@ -347,7 +347,7 @@ namespace MJC.qbo
             }
         }
 
-        async public Task<bool> CreateInvoice(CustomerData customer, string invoiceNumber, List<OrderItem> itemList, string processedBy, int shippingTo, string invoiceDesc)
+        async public Task<bool> CreateInvoice(CustomerData customer, string invoiceNumber, List<OrderItem> itemList, string processedBy, int shippingTo, string invoiceDesc, string poNumber, string sVia, string terms)
         {
             DataService dataService = new DataService(QboLib.QboLocal.Tokens.AccessToken, this.realmId, useSandbox: sandBox);
             
@@ -397,7 +397,6 @@ namespace MJC.qbo
                     }
                     else
                     {
-                        //// Description Only *WORKS - No Price and No Quantity*
                         var salesItemLine = new Line
                         {
                             Id = qboItemId,
@@ -437,7 +436,7 @@ namespace MJC.qbo
                 DateTime invoiceDate = DateTime.Now;
                 double invoiceTotal = Convert.ToDouble(invoice.Balance);
 
-                int orderId = orderModelObj.CreateOrder(customer.Id, customer.Name, customer.Terms, invoice.DocNumber, processedBy, shippingTo, invoiceDate, invoiceDesc, invoiceTotal, invoice.SyncToken, invoice.Id, 1, 1);
+                int orderId = orderModelObj.CreateOrder(customer.Id, customer.Name, terms, invoiceNumber, processedBy, shippingTo, DateTime.Now, invoiceDesc, invoiceTotal, invoice.SyncToken, invoice.Id, poNumber, sVia, 1, 1);
 
                 Line[] items = invoice.Line;
                 index = 0;
@@ -496,6 +495,11 @@ namespace MJC.qbo
                     }
                     
                     lineTotal = _taxAmount + _lineTotal;
+
+                    if(skuId == null)
+                    {
+                        skuId = 0; // Non Inventory Item, Special Item, Messages
+                    }
 
                     orderItemModelObj.CreateOrderItem(orderId, skuId, qty, description, message, tax, priceTier, unitPrice, lineTotal, salesCode, sku, qboSkuId, qboItemId, lineNum, createdBy, updatedBy);
                     //orderItemModelObj.UpdateOrderItemMessageById(message, orderId); 
@@ -564,7 +568,7 @@ namespace MJC.qbo
             return false;
         }
 
-        async public void UpdateCustomer(string displayName, string givenName, string middleName, string familyName, string title, string suffix, 
+        async public Task UpdateCustomer(string displayName, string givenName, string middleName, string familyName, string title, string suffix, 
             string business_phone, string homePhone, string fax, string address1, string address2, string city, 
             string state, string zipCode, string email, DateTime date_opened, string salesman, 
             bool resale, string stmtCustomerNumber, string stmtName, int? priceTierId, string terms, 
@@ -603,13 +607,14 @@ namespace MJC.qbo
                 });
 
                 Customer customer = result.Response;
-         
+
                 if (customer != null)
                 {
                     qboId = customer.Id;
                     syncToken = customer.SyncToken;
+
+                    customerModelObj.UpdateCustomer(displayName, givenName, middleName, familyName, title, suffix, business_phone, homePhone, fax, address1, address2, city, state, zipCode, email, date_opened, salesman, resale, stmtCustomerNumber, stmtName, priceTierId, terms, limit, memo, taxable, send_stm, core_tracking, coreBalance, acct_type, print_core_tot, porequired, creditCodeId, interestRate, accountBalance, ytdPurchases, ytdInterest, last_date_purch, qboId, syncToken, customerId, customerNumber);
                 }
-                customerModelObj.UpdateCustomer(displayName, givenName, middleName, familyName, title, suffix, business_phone, homePhone, fax, address1, address2, city, state, zipCode, email, date_opened, salesman, resale, stmtCustomerNumber, stmtName, priceTierId, terms, limit, memo, taxable, send_stm, core_tracking, coreBalance, acct_type, print_core_tot, porequired, creditCodeId, interestRate, accountBalance, ytdPurchases, ytdInterest, last_date_purch, qboId, syncToken, customerId, customerNumber);
             }
             catch (Exception exc)
             {
@@ -625,13 +630,13 @@ namespace MJC.qbo
 
         async public Task LoadCustomers()
         {
-            DataService dataService= new DataService(QboLib.QboLocal.Tokens.AccessToken, this.realmId, useSandbox: sandBox);
+            DataService dataService = new DataService(QboLib.QboLocal.Tokens.AccessToken, this.realmId, useSandbox: sandBox);
 
             try
             {
                 for (int i = 0; i < 100; i++)
                 {
-                    var statement = "select * from Customer ORDERBY Id StartPosition " + (i * 100)  + " MaxResults 100";
+                    var statement = "select * from Customer ORDERBY Id StartPosition " + (i * 100) + " MaxResults 100";
                     var result = await dataService.QueryAsync<Customer>(statement);
                     var customers = result.Response.Entities;
 
@@ -667,6 +672,50 @@ namespace MJC.qbo
             }
         }
 
+        async public Task LoadVendors()
+        {
+            DataService dataService = new DataService(QboLib.QboLocal.Tokens.AccessToken, this.realmId, useSandbox: sandBox);
+
+            try
+            {
+                for (int i = 0; i < 100; i++)
+                {
+                    var statement = "select * from Vendor ORDERBY Id StartPosition " + (i * 100) + " MaxResults 100";
+                    var result = await dataService.QueryAsync<Vendor>(statement);
+                    var vendors = result.Response.Entities;
+
+                    if (vendors != null)
+                    {
+                        foreach (var vendor in vendors)
+                        {
+                            if (!await DoesVendorExist(vendor)) 
+                            {
+                                //    //UpdateCustomer(customer);
+                                //}
+                                //else
+                                //{
+                                CreateNewVendor(vendor);
+                            }
+
+                        }
+                    }
+
+                    Console.WriteLine("Vendors have been downloaded.");
+                }
+
+            }
+            catch (Exception exc)
+            {
+                Sentry.SentrySdk.CaptureException(exc);
+                if (exc.Message.Contains("KEY"))
+                {
+                    Messages.ShowError("There was a problem updating the SKU.");
+                }
+
+                throw;
+            }
+        }
+
         async private Task<bool> DoesCustomerExist(Customer customer)
         {
             using (var connection = GetConnection())
@@ -678,6 +727,29 @@ namespace MJC.qbo
                     command.Connection = connection;
                     command.CommandText = @"SELECT * FROM dbo.Customers WHERE qboId=@qboId";
                     command.Parameters.AddWithValue("@qboId", customer.Id);
+
+                    var row = command.ExecuteScalar();
+                    if (row != null)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        async private Task<bool> DoesVendorExist(Vendor vendor)
+        {
+            using (var connection = GetConnection())
+            {
+                connection.Open();
+
+                using (var command = new SqlCommand())
+                {
+                    command.Connection = connection;
+                    command.CommandText = @"SELECT * FROM dbo.Vendors WHERE qboId=@qboId";
+                    command.Parameters.AddWithValue("@qboId", vendor.Id);
 
                     var row = command.ExecuteScalar();
                     if (row != null)
@@ -794,6 +866,80 @@ namespace MJC.qbo
                     command.Parameters.AddWithValue("@qboId", customer.Id);
 
                     command.ExecuteScalar();
+                }
+            }
+        }
+
+        async private void CreateNewVendor(Vendor vendor)
+        {
+            bool? active = vendor.Active;
+            string customerNumber = vendor.DisplayName;
+            string customerName = "";
+            if (!string.IsNullOrEmpty(vendor.CompanyName))
+                customerName = vendor.CompanyName;
+            else customerName = vendor.FullyQualifiedName;
+            string? address1 = null;
+            string? address2 = null;
+            string? city = null;
+            string? state = null;
+            string? zipCode = null;
+            if (vendor.BillAddr != null)
+            {
+                address1 = vendor.BillAddr.Line1;
+                address2 = vendor.BillAddr.Line2;
+                city = vendor.BillAddr.City;
+                state = vendor.BillAddr.CountrySubDivisionCode;
+                zipCode = vendor.BillAddr.PostalCode;
+            }
+
+            string businessPhone = vendor.BusinessNumber;
+            string? fax = null;
+            if (vendor.Fax != null)
+                fax = vendor.Fax.FreeFormNumber;
+            string? homePhone = null;
+            if (vendor.PrimaryPhone != null)
+                homePhone = vendor.PrimaryPhone.FreeFormNumber;
+            string? email = null;
+            if (vendor.PrimaryEmailAddr != null)
+                email = vendor.PrimaryEmailAddr.Address;
+            DateTime dateOpened = DateTime.Now;
+            decimal? balance = vendor.Balance;
+            DateTimeOffset? createdAt = vendor.MetaData.CreateTime;
+            int createdBy = 1; // TODO: Remove hard coding
+            //if (customer.MetaData.CreatedByRef != null)
+            //    createdBy = int.Parse(customer.MetaData.CreatedByRef.value);
+            DateTimeOffset? updatedAt = vendor.MetaData.LastUpdatedTime;
+            int updatedBy = 1;
+            //if (customer.MetaData.CreatedByRef != null)
+            //    updatedBy = int.Parse(customer.MetaData.LastModifiedByRef.value);
+
+            using (var connection = GetConnection())
+            {
+                connection.Open();
+
+                using (var command = new SqlCommand())
+                {
+                    command.Connection = connection;
+                    command.CommandText = @"INSERT INTO dbo.Vendors (active, archived, vendorNumber, vendorName, address1, address2, city, state, zipcode, businessPhone, fax, createdAt, createdBy, updatedAt, updatedBy, qboId)  OUTPUT INSERTED.id VALUES(@Value1, @Value2, @Value3, @Value4, @Value5, @Value6, @Value7, @Value8, @Value9, @Value10, @Value11, @Value12, @Value13, @Value14, @Value15, @qboId)";
+
+                    command.Parameters.AddWithValue("@Value1", active);
+                    command.Parameters.AddWithValue("@Value2", false);
+                    command.Parameters.AddWithValue("@Value3", vendor.DisplayName);
+                    command.Parameters.AddWithValue("@Value4", vendor.CompanyName);
+                    command.Parameters.AddWithValue("@Value5", vendor.BillAddr?.Line1 ?? "");
+                    command.Parameters.AddWithValue("@Value6", vendor.BillAddr?.Line2 ?? "");
+                    command.Parameters.AddWithValue("@Value7", vendor.BillAddr?.City ?? "");
+                    command.Parameters.AddWithValue("@Value8", vendor.BillAddr?.CountrySubDivisionCode ?? "");
+                    command.Parameters.AddWithValue("@Value9", vendor.BillAddr?.PostalCode ?? "");
+                    command.Parameters.AddWithValue("@Value10", vendor.PrimaryPhone?.FreeFormNumber ?? "");
+                    command.Parameters.AddWithValue("@Value11", vendor.Fax?.FreeFormNumber ?? "");
+                    command.Parameters.AddWithValue("@Value12", createdAt);
+                    command.Parameters.AddWithValue("@Value13", createdBy);
+                    command.Parameters.AddWithValue("@Value14", updatedAt);
+                    command.Parameters.AddWithValue("@Value15", updatedBy);
+                    command.Parameters.AddWithValue("@qboId", vendor.Id);
+
+                    var i = command.ExecuteScalar();
                 }
             }
         }

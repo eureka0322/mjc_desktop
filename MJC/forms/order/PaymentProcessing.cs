@@ -154,14 +154,20 @@ namespace MJC.forms.order
             CompletePayment.GetButton().Click += async (sender, e) =>
             {
                 calcPayment();
+                double amtReceived = double.Parse(totalPayment.ToString());
+                
+                if (amtReceived == 0)
+                {
+                    Messages.ShowError("You must provide an amount received.");
+                    return;
+                }
 
                 try
                 {
                     QboApiService qboApiService = new QboApiService();
                     dynamic customerData = Session.CustomerModelObj.GetCustomerDataById(this.customerId);
                     DateTime dateReceived = DateTime.Now;
-                    double amtReceived = double.Parse(totalPayment.ToString());
-
+                    
                     int customerId = (int)customerData.id;
                     var customerQboId = (int)customerData.qboId;
                     var customerDisplayName = customerData.displayName ?? "";

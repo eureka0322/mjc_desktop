@@ -57,7 +57,7 @@ namespace MJC.forms.login
                 Program.permissionReceivables = UserData.permissionReceivables;
                 Program.permissionSetting = UserData.permissionSetting;
                 Program.permissionUsers = UserData.permissionUsers;
-                Program.permissionQuickBooks = UserData.permissionReceivables;
+                Program.permissionQuickBooks = UserData.permissionQuickBooks;
 
                 Dashboard dashboard = new Dashboard();
                 dashboard.Show();

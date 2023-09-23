@@ -12,6 +12,12 @@ using System.Data.SqlClient;
 using MJC.common;
 using MJC.config;
 using System.IO;
+using System.Drawing;
+using Microsoft.Extensions.Logging;
+using Microsoft.AppCenter;
+using Microsoft.AppCenter.Crashes;
+using Microsoft.AppCenter.Analytics;
+using LogLevel = Microsoft.AppCenter.LogLevel;
 
 namespace MJC
 {
@@ -36,6 +42,9 @@ namespace MJC
             // see https://aka.ms/applicationconfiguration.
             Application.EnableVisualStyles();
             ApplicationConfiguration.Initialize();
+            AppCenter.Start("80bb0e62-814b-4f68-9a48-3786a507b4b0",
+                  typeof(Analytics), typeof(Crashes));
+            AppCenter.LogLevel = LogLevel.Verbose;
 
             Sentry.SentrySdk.Init(o =>
             {
@@ -46,7 +55,7 @@ namespace MJC
                 // Set TracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
                 // We recommend adjusting this value in production.
                 o.TracesSampleRate = 1.0;
-
+                o.IsGlobalModeEnabled = true;
                 o.Release = "mjc-desktop@v" + System.Reflection.Assembly.GetEntryAssembly().GetName().Version;
 #if DEBUG
                 o.Environment = "development";

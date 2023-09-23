@@ -72,7 +72,21 @@ namespace MJC.model
             }
         }
 
-        public int CreateOrder(int customerId, string customerName, string terms, string invoiceNumber, string processedBy, int shippingTo,  DateTime invoiceDate, string invoiceDesc, double invoiceTotal, string syncToken, string qboOrderId, int createdBy = 1, int updatedBy = 1)
+         public int CreateOrder(int customerId, 
+            string customerName, 
+            string terms, 
+            string invoiceNumber, 
+            string processedBy, 
+            int shippingTo,  
+            DateTime invoiceDate, 
+            string invoiceDesc, 
+            double invoiceTotal, 
+            string syncToken, 
+            string qboOrderId, 
+            string poNumber,
+            string shipVia,
+            int createdBy = 1, 
+            int updatedBy = 1)
         {
             using (var connection = GetConnection())
             {
@@ -83,24 +97,62 @@ namespace MJC.model
                 using (var command = new SqlCommand())
                 {
                     command.Connection = connection;
-                    command.CommandText = @"INSERT INTO dbo.Orders(customerId, customerName, creditCode, terms, invoiceNumber, invoiceDate, invoiceDesc, invoiceTotal, syncToken, qboOrderId, createdBy, updatedBy, active, processedBy, shipTo) OUTPUT INSERTED.id VALUES(@Value1, @Value2, @Value3, @Value4, @Value5, @Value6, @Value7, @Value8, @Value9, @Value10, @Value11, @Value12, @Value13, @Value14, @Value15)";
-                    command.Parameters.AddWithValue("@Value1", customerId);
-                    command.Parameters.AddWithValue("@Value2", customerName);
+                    command.CommandText = @"INSERT INTO dbo.Orders(
+                        customerId, 
+                        customerName, 
+                        creditCode, 
+                        terms, 
+                        invoiceNumber, 
+                        invoiceDate, 
+                        invoiceDesc, 
+                        invoiceTotal, 
+                        syncToken, 
+                        qboOrderId, 
+                        createdBy, 
+                        updatedBy, 
+                        active, 
+                        poNumber,
+                        shipVia,
+                        processedBy, 
+                        shipTo) 
+                    OUTPUT INSERTED.id VALUES(
+                        @customerId, 
+                        @customerName, 
+                        @creditCode, 
+                        @terms, 
+                        @invoiceNumber, 
+                        @invoiceDate, 
+                        @invoiceDesc, 
+                        @invoiceTotal, 
+                        @syncToken, 
+                        @qboOrderId, 
+                        @createdBy, 
+                        @updatedBy, 
+                        @active,                         
+                        @poNumber, 
+                        @shipVia, 
+                        @processedBy, 
+                        @shippingTo)";
+
+                    command.Parameters.AddWithValue("@customerId", customerId);
+                    command.Parameters.AddWithValue("@customerName", customerName);
                     if (!string.IsNullOrEmpty(creditCode))
-                        command.Parameters.AddWithValue("@Value3", creditCode);
-                    else command.Parameters.AddWithValue("@Value3", DBNull.Value);
-                    command.Parameters.AddWithValue("@Value4", terms);
-                    command.Parameters.AddWithValue("@Value5", invoiceNumber);
-                    command.Parameters.AddWithValue("@Value6", invoiceDate);
-                    command.Parameters.AddWithValue("@Value7", invoiceDesc);
-                    command.Parameters.AddWithValue("@Value8", invoiceTotal);
-                    command.Parameters.AddWithValue("@Value9", syncToken);
-                    command.Parameters.AddWithValue("@Value10", qboOrderId);
-                    command.Parameters.AddWithValue("@Value11", createdBy);
-                    command.Parameters.AddWithValue("@Value12", updatedBy);
-                    command.Parameters.AddWithValue("@Value13", 1);
-                    command.Parameters.AddWithValue("@Value14", processedBy);
-                    command.Parameters.AddWithValue("@Value15", shippingTo);
+                        command.Parameters.AddWithValue("@creditCode", creditCode);
+                    else command.Parameters.AddWithValue("@creditCode", DBNull.Value);
+                    command.Parameters.AddWithValue("@terms", terms);
+                    command.Parameters.AddWithValue("@invoiceNumber", invoiceNumber);
+                    command.Parameters.AddWithValue("@invoiceDate", invoiceDate);
+                    command.Parameters.AddWithValue("@invoiceDesc", invoiceDesc);
+                    command.Parameters.AddWithValue("@invoiceTotal", invoiceTotal);
+                    command.Parameters.AddWithValue("@syncToken", syncToken);
+                    command.Parameters.AddWithValue("@qboOrderId", qboOrderId);
+                    command.Parameters.AddWithValue("@createdBy", createdBy);
+                    command.Parameters.AddWithValue("@updatedBy", updatedBy);
+                    command.Parameters.AddWithValue("@active", 1);
+                    command.Parameters.AddWithValue("@poNumber", poNumber);
+                    command.Parameters.AddWithValue("@shipVia", shipVia ?? "");
+                    command.Parameters.AddWithValue("@processedBy", processedBy);
+                    command.Parameters.AddWithValue("@shippingTo", shippingTo);
 
                     orderId = (int)command.ExecuteScalar();
                 }

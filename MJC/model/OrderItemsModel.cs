@@ -379,9 +379,9 @@ namespace MJC.model
                     command.CommandText = @"INSERT INTO OrderItems(active, orderId, skuId, quantity, description, message, tax, priceTier, unitPrice, lineTotal, salesCode, sku, qboSkuId, qboOrderItemId, lineNum, createdBy, updatedBy) OUTPUT INSERTED.id VALUES(@Value1, @Value2, @Value3, @Value4, @Value5, @message, @Value6, @Value7, @Value8, @Value9, @Value10, @Value11, @Value12, @Value13, @Value14, @Value15, @Value16)";
                     command.Parameters.AddWithValue("@Value1", 1);
                     command.Parameters.AddWithValue("@Value2", orderId);
-                    if(skuId != 0)
+                    //if(skuId != 0)
                         command.Parameters.AddWithValue("@Value3", skuId);
-                    else command.Parameters.AddWithValue("@Value3", DBNull.Value);
+                    //else command.Parameters.AddWithValue("@Value3", DBNull.Value);
                     if (qty != null)
                         command.Parameters.AddWithValue("@Value4", qty);
                     else command.Parameters.AddWithValue("@Value4", DBNull.Value);
@@ -401,10 +401,10 @@ namespace MJC.model
                         command.Parameters.AddWithValue("@Value9", lineTotal);
                     else command.Parameters.AddWithValue("@Value9", DBNull.Value);
                     command.Parameters.AddWithValue("@Value10", salesCode);
-                    command.Parameters.AddWithValue("@Value11", sku);
-                    if(qboSkuId != 0)
+                    command.Parameters.AddWithValue("@Value11", sku ?? "");
+                    //if(qboSkuId != 0)
                         command.Parameters.AddWithValue("@Value12", qboSkuId);
-                    else command.Parameters.AddWithValue("@Value12", DBNull.Value);
+                    //else command.Parameters.AddWithValue("@Value12", DBNull.Value);
                     if (!string.IsNullOrEmpty(qboOrderItemId))
                         command.Parameters.AddWithValue("@Value13", qboOrderItemId);
                     else command.Parameters.AddWithValue("@Value13", DBNull.Value);

@@ -38,8 +38,14 @@ namespace MJC.forms.category
             AddHotKeyEvents();
 
             InitCategoryListGrid();
-            //this.VisibleChanged += CategoryMargin_VisibleChanged(object sender, EventArgs e);
+
+            this.Activated += CategoryMargin_Activated;
             this.VisibleChanged += this.CategoryMargin_VisibleChanged;
+        }
+
+        private void CategoryMargin_Activated(object? sender, EventArgs e)
+        {
+            LoadCategoryList();
         }
 
         private void AddHotKeyEvents()
@@ -97,7 +103,7 @@ namespace MJC.forms.category
 
         private void InitCategoryListGrid()
         {
-            List<KeyValuePair<int, string>> PriceTierHeaderData = PriceTiersModelObj.GetPriceTierItems();
+            List<KeyValuePair<int, string>> PriceTierHeaderData = Session.PriceTiersModelObj.GetPriceTierItems();
 
             CLGridRefer = categoryListGrid.GetGrid();
             CLGridRefer.Location = new Point(0, 95);
@@ -121,9 +127,6 @@ namespace MJC.forms.category
             this.Controls.Add(CLGridRefer);
      
             this.CLGridRefer.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.addcategory_btn_Click);
-      
-
-            LoadCategoryList();
         }
 
         private void LoadCategoryList()
@@ -136,7 +139,10 @@ namespace MJC.forms.category
                 foreach (CategoryData categoryData in categoryDataList)
                 {
                     List<KeyValuePair<string, double>> priceTierData = new List<KeyValuePair<string, double>>();
+
+                    // TODO: This is our culprit for the slow load.
                     priceTierData = PriceTiersModelObj.GetPriceTierMargin(categoryData.id);
+
                     int rowIndex = CLGridRefer.Rows.Add();
                     DataGridViewRow newRow = CLGridRefer.Rows[rowIndex];
 

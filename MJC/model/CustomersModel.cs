@@ -334,7 +334,7 @@ namespace MJC.model
                         string address1 = reader.IsDBNull(2) ? "" : reader.GetString(2);
                         string customerName = reader.IsDBNull(3) ? "" : reader.GetString(3);
                         string terms = reader.IsDBNull(4) ? "" : reader.GetString(4);
-                        string poRequired = reader.IsDBNull(5) ? "" : reader.GetValue(5).ToString();
+                        bool poRequired = reader.IsDBNull(5) ? false : (bool)reader.GetValue(5);
                         string city = reader.IsDBNull(6) ? "" : reader.GetString(6);
                         string state = reader.IsDBNull(7) ? "" : reader.GetString(7);
                         string zipcode = reader.IsDBNull(8) ? "" : reader.GetString(8);

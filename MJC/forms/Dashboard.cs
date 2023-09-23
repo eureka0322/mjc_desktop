@@ -25,7 +25,7 @@ namespace MJC.forms
         private HotkeyButton hkOpenSelection = new HotkeyButton("Enter", "Open Selection", Keys.Enter);
 
         private NavigationButton OrderEntry = new NavigationButton("Order Entry", new OrderEntry());
-        private NavigationButton Inventory = new NavigationButton("Inventory", new InventoryDashboard());
+        private NavigationButton Inventory = new NavigationButton("Inventory", new InventoryDashboard()); // TODO: This needs refactored to not be so slow
         private NavigationButton Receivables = new NavigationButton("Receivables", new ReceivableDashboard());
         private NavigationButton Users = new NavigationButton("Users", new Users());
         //private NavigationButton Accounting = new NavigationButton("Accounting", new Accounting());
@@ -85,10 +85,8 @@ namespace MJC.forms
                         Session.SettingsModelObj.Settings.accessToken = QboLocal.Tokens.AccessToken;
                         Session.SettingsModelObj.Settings.refreshToken = QboLocal.Tokens.RefreshToken;
 
-                        // TODO: This is overwriting the settings of other sessions
-                        // Session.SettingsModelObj.SaveTokens(QboLocal.Tokens.AccessToken, QboLocal.Tokens.RefreshToken);
-
-                        // Session.SettingsModelObj.SaveSetting(Session.SettingsModelObj.Settings.taxCodeId, Session.SettingsModelObj.Settings.businessName, Session.SettingsModelObj.Settings.businessDescription, Session.SettingsModelObj.Settings.address1, Session.SettingsModelObj.Settings.address2, Session.SettingsModelObj.Settings.city, Session.SettingsModelObj.Settings.state, Session.SettingsModelObj.Settings.postalCode, Session.SettingsModelObj.Settings.phone, Session.SettingsModelObj.Settings.fax, Session.SettingsModelObj.Settings.ein, Session.SettingsModelObj.Settings.trainingEnabled, Session.SettingsModelObj.Settings.targetPrinter, Session.SettingsModelObj.Settings.accessToken, Session.SettingsModelObj.Settings.refreshToken, Session.SettingsModelObj.Settings.businessFooter, Session.SettingsModelObj.Settings.businessTermsOfService, Session.SettingsModelObj.Settings.invoicePrintQty.GetValueOrDefault(), Session.SettingsModelObj.Settings.holdOrderPrintQty.GetValueOrDefault(), Session.SettingsModelObj.Settings.quotePrintQty.GetValueOrDefault());
+                        Session.SettingsModelObj.SaveTokens(QboLocal.Tokens.AccessToken, QboLocal.Tokens.RefreshToken);
+                        
                         lastRefreshedQBO = DateTime.Now;
                     }
                     else

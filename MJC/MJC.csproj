@@ -26,6 +26,9 @@
     </PackageReference>
     <PackageReference Include="Antlr4.Runtime" Version="4.6.6" />
     <PackageReference Include="IppDotNetSdkForQuickBooksApiV3" Version="14.6.3.6" />
+    <PackageReference Include="Microsoft.AppCenter" Version="5.0.2" />
+    <PackageReference Include="Microsoft.AppCenter.Analytics" Version="5.0.2" />
+    <PackageReference Include="Microsoft.AppCenter.Crashes" Version="5.0.2" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.1988-prerelease" />
     <PackageReference Include="PDFFilePrint" Version="1.0.3" />
     <PackageReference Include="RawPrint" Version="0.5.0" />
@@ -40,6 +43,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="forms\order\LookupOptions.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Update="forms\shipping\ShippingModal.cs">
       <SubType>Form</SubType>
     </Compile>

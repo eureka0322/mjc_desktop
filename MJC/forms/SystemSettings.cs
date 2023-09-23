@@ -70,6 +70,10 @@ namespace MJC.forms
             {
                 _navigateToPrev(sender, e);
             }
+            else
+            {
+                e.Cancel = true;
+            }
         }
 
         private void GetSettings()
@@ -99,8 +103,13 @@ namespace MJC.forms
             HoldOrdersPrintQty.GetTextBox().Text = Session.SettingsModelObj.Settings.holdOrderPrintQty.ToString();
             QuotePrintQty.GetTextBox().Text = Session.SettingsModelObj.Settings.quotePrintQty.ToString();
 
+            if (string.IsNullOrEmpty(InvoicePrintQty.GetTextBox().Text)) InvoicePrintQty.GetTextBox().Text = "2";
+            if (string.IsNullOrEmpty(HoldOrdersPrintQty.GetTextBox().Text)) HoldOrdersPrintQty.GetTextBox().Text = "2";
+            if (string.IsNullOrEmpty(QuotePrintQty.GetTextBox().Text)) QuotePrintQty.GetTextBox().Text = "2";
+
             var taxCodes = Session.SalesTaxModelObj.SalesTaxCodeDataList.Select(x => x.name).ToArray();
             ProcessingTax.GetComboBox().Items.AddRange(taxCodes);
+            if (taxCodes.Length > 0) ProcessingTax.GetComboBox().SelectedIndex = 0;
 
             var taxCodeId = Session.SettingsModelObj.Settings.taxCodeId;
             // Default selection to 0 if possible
@@ -123,40 +132,6 @@ namespace MJC.forms
 
             ProcessingTax.GetComboBox().DropDownStyle = ComboBoxStyle.DropDownList;
             ProcessingTax.GetComboBox().AutoCompleteMode = AutoCompleteMode.Suggest;
-
-            InvoicePrintQty.GetTextBox().LostFocus += InvoicePrintQty_LostFocus;
-            HoldOrdersPrintQty.GetTextBox().LostFocus += HoldOrdersPrintQty_LostFocus;
-            QuotePrintQty.GetTextBox().LostFocus += QuotePrintQty_LostFocus;
-        }
-
-        private void InvoicePrintQty_LostFocus(object sender, EventArgs e)
-        {
-            if (!int.TryParse(InvoicePrintQty.GetTextBox().Text, out int invoicePrintQty))
-            {
-                Messages.ShowError("Please enter a valid InvoicePrintQty.");
-                InvoicePrintQty.GetTextBox().Select();
-                return;
-            }
-        }
-
-        private void HoldOrdersPrintQty_LostFocus(object sender, EventArgs e)
-        {
-            if (!int.TryParse(HoldOrdersPrintQty.GetTextBox().Text, out int holdOrderPrintQty))
-            {
-                Messages.ShowError("Please enter a valid HoldOrdersPrintQty.");
-                HoldOrdersPrintQty.GetTextBox().Select();
-                return;
-            }
-        }
-
-        private void QuotePrintQty_LostFocus(object sender, EventArgs e)
-        {
-            if (!int.TryParse(InvoicePrintQty.GetTextBox().Text, out int quotePrintQty))
-            {
-                Messages.ShowError("Please enter a valid QuotePrintQty.");
-                QuotePrintQty.GetTextBox().Select();
-                return;
-            }
         }
 
         private void Form_KeyDown(object sender, KeyEventArgs e)
@@ -179,6 +154,11 @@ namespace MJC.forms
                 else if (result == DialogResult.No)
                 {
                     _navigateToPrev(sender, e);
+                }
+                else
+                {
+                    e.SuppressKeyPress = true;
+                    e.Handled = true;
                 }
             }
         }
@@ -224,7 +204,7 @@ namespace MJC.forms
 
             if (!int.TryParse(HoldOrdersPrintQty.GetTextBox().Text, out holdOrderPrintQty))
             {
-                Messages.ShowError("Please enter a valid HoldOrdersPrintQty.");
+                Messages.ShowError("Please enter a valid Print Quantity for Hold Orders.");
                 HoldOrdersPrintQty.GetTextBox().Select();
                 return false;
             }
@@ -272,18 +252,18 @@ namespace MJC.forms
             hkSyncQuickBooks.GetButton().Click += async (sender, e) =>
             {
                 QboApiService qboClient = new QboApiService();
-                try
-                {
-                    qboClient.InitDatabase();
+                //try
+                //{
+                // qboClient.InitDatabase();
+                //    await qboClient.LoadCustomers();
+                //    ShowInformation("QuickBooks successfully downloaded.");
+                //}
+                //catch (Exception exception)
+                //{
+                //    ShowError("QuickBooks failed to download data.");
+                //}
 
-                    await qboClient.LoadCustomers();
-
-                    ShowInformation("QuickBooks successfully downloaded.");
-                }
-                catch (Exception exception)
-                {
-                    ShowError("QuickBooks failed to download data.");
-                }
+                await qboClient.LoadVendors();
             };
         }
 
